@@ -1,8 +1,8 @@
 export const siteConfig = {
   name: "DNotes",
-  url: "https://dynamicnotes.me",
+  url: "https://notes-dynamic.vercel.app/",
   description:
-    "🚀 A SAAS web app, a Notion.so replica, featuring real-time collaboration and customizable workspaces built using ▲ Next.js, shadcn/ui, TailwindCSS",
+    "🚀 A modern note-taking app, a Notion.so replica, featuring real-time collaboration and customizable workspaces",
 
   author: {
     name: "Kaito",
