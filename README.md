@@ -4,7 +4,7 @@
 
 ### [WIP] 🚀 A SAAS web app, a Notion.so replica, featuring real-time collaboration and customizable workspaces built using ▲ Next.js, shadcn/ui, TailwindCSS
 
-**[<kbd> <br> &nbsp;**Live Demo**&nbsp; <br> </kbd>][https://notes-dynamic.vercel.app/]**
+**[<kbd> <br> &nbsp;**Live Demo**&nbsp; <br> </kbd>][site]**
 
 ## Building from Source
 
