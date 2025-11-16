@@ -6,7 +6,7 @@ export const siteConfig = {
 
 
   links: {
-    github: "https://github.com/rajput-hemant/dynamic-notes",
+    github: "https://github.com/Khoa-Dam/notes_dynamic",
     // discord: "https://discord.gg/rajput-hemant#8269",
     // x: "https://twitter.com/rajput_hemant01",
   },
