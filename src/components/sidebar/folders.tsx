@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Check,
   ChevronDown,
-  Edit2,
   FileIcon,
   FileX,
   FolderIcon,
@@ -402,16 +401,7 @@ export function Folders() {
                           </Kbd>
                         </ContextMenuItem>
 
-                        <ContextMenuItem
-                          onClick={currentlyInDev}
-                          className="cursor-pointer"
-                        >
-                          <Edit2 className="mr-2 size-4 shrink-0" />
-                          Rename
-                          <Kbd className="ml-auto">
-                            {isAppleDevice() ? "⌘" : "Ctrl"}+E
-                          </Kbd>
-                        </ContextMenuItem>
+
 
                         <ContextMenuItem
                           onKeyDown={(e) => {
@@ -480,18 +470,6 @@ export function Folders() {
                                 {title}
                               </Link>
 
-                              <Tooltip delayDuration={0}>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    onClick={currentlyInDev}
-                                    className="size-7 p-0 text-muted-foreground"
-                                  >
-                                    <Edit2 className="size-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Edit file</TooltipContent>
-                              </Tooltip>
 
                               <AlertDialog>
                                 <AlertDialogTrigger>
