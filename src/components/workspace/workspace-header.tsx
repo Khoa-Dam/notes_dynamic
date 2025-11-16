@@ -4,6 +4,7 @@ import React from "react";
 
 import type { Workspace } from "@/types/db";
 
+import { SidebarMobile } from "@/components/sidebar/sidebar-mobile";
 import { cn } from "@/lib/utils";
 
 interface WorkspaceHeaderProps {
@@ -38,6 +39,11 @@ export function WorkspaceHeader({ workspace }: WorkspaceHeaderProps) {
                     workspace.bannerUrl && "min-h-[200px]"
                 )}
             >
+                {/* Mobile Menu Button */}
+                <div className="lg:hidden">
+                    <SidebarMobile />
+                </div>
+
                 {/* Workspace Info */}
                 <div className="flex-1 min-w-0">
                     <h1 className="text-2xl font-bold truncate">

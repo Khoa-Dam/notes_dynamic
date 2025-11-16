@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EmojiPicker } from "@/components/emoji-picker";
+import { SidebarMobile } from "@/components/sidebar/sidebar-mobile";
 import { updateFile, deleteFile } from "@/lib/db/queries";
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -356,6 +357,10 @@ export function FileEditor({ file, workspaceId }: FileEditorProps) {
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b p-4">
         <div className="flex items-center gap-4 flex-1">
+          {/* Mobile Menu Button */}
+          <div className="lg:hidden">
+            <SidebarMobile />
+          </div>
           <Button variant="ghost" size="sm" onClick={handleBack}>
             <ChevronLeft className="h-4 w-4 mr-2" />
             Back

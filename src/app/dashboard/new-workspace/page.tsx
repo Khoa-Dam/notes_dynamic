@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { SidebarMobile } from "@/components/sidebar/sidebar-mobile";
 import { getCurrentUser } from "@/lib/auth";
 import { WorkspaceForm } from "./workspace-form";
 
@@ -37,6 +38,11 @@ export default async function WorkspaceSetupPage() {
       <Separator orientation="vertical" />
 
       <section className="flex size-full flex-col items-center justify-center gap-14 px-4">
+        {/* Mobile Menu Button */}
+        <div className="absolute left-4 top-4 lg:hidden">
+          <SidebarMobile />
+        </div>
+
         <h1 className="text-center font-heading text-4xl font-bold [text-shadow:0_4px_0_#e1e1e1]dark:bg-gradient-to-br dark:from-neutral-200 dark:to-neutral-600 dark:bg-clip-text dark:text-transparent dark:text-shadow-none sm:text-5xl md:text-6xl">
           Create your first
           <br />

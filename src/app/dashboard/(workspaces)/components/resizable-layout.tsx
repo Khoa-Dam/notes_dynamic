@@ -4,6 +4,7 @@ import React from "react";
 import { setCookie } from "cookies-next";
 
 import { Sidebar } from "@/components/sidebar/sidebar";
+import { SidebarMobile } from "@/components/sidebar/sidebar-mobile";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -50,7 +51,7 @@ export function ResizableLayout(props: ResizableLayoutProps) {
         className={cn(
           "hidden lg:block",
           isCollapsed &&
-            "min-w-14 !overflow-visible transition-all duration-300 ease-in-out"
+          "min-w-14 overflow-visible! transition-all duration-300 ease-in-out"
         )}
       >
         <Sidebar isCollapsed={isCollapsed} />
@@ -59,7 +60,7 @@ export function ResizableLayout(props: ResizableLayoutProps) {
       <ResizableHandle withHandle className="hidden lg:flex" />
 
       <ResizablePanel defaultSize={defaultLayout[1]}>
-        <main className="overflow-auto">{children}</main>
+        <main className="h-full overflow-auto">{children}</main>
       </ResizablePanel>
     </ResizablePanelGroup>
   );
