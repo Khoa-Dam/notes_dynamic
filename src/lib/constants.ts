@@ -106,37 +106,6 @@ export const USERS = [
   },
 ];
 
-export const PRICING_CARDS = [
-  {
-    planType: "Free Plan",
-    price: "0",
-    description: "Limited block trials for teams",
-    highlightFeature: "",
-    features: [
-      "Unlimited blocks for teams",
-      "Unlimited file uploads",
-      "30 day page history",
-      "Invite 2 guests",
-    ],
-  },
-  {
-    planType: "Pro Plan",
-    price: "499",
-    description: "Billed annually. ₹555 billed monthly",
-    highlightFeature: "Everything in free +",
-    features: [
-      "Unlimited blocks for teams",
-      "Unlimited file uploads",
-      "1 year page history",
-      "Invite 10 guests",
-    ],
-  },
-];
-
-export const PRICING_PLANS = { proplan: "Pro Plan", freeplan: "Free Plan" };
-
-export const MAX_FOLDERS_FREE_PLAN = 3;
-
 export const ACCEPTED_IMAGE_TYPES = [
   "image/jpeg",
   "image/jpg",

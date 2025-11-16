@@ -48,8 +48,38 @@ export const store = proxy<AppState & AppAction>({
 
 export function setStore(newState: AppState) {
   store.user = newState.user;
-  store.files = newState.files;
-  store.folders = newState.folders;
+
+  // Merge files instead of replacing to preserve optimistic updates
+  if (newState.files) {
+    const existingFileIds = new Set(store.files.map(f => f.id));
+    const newFiles = newState.files.filter(f => f.id && !existingFileIds.has(f.id));
+    // Keep existing files that are not in newState (optimistic updates) and merge with server data
+    const existingFiles = store.files.filter(f => !newState.files?.some(nf => nf.id === f.id));
+    // Update existing files with server data if they exist in newState
+    const updatedFiles = store.files
+      .filter(f => newState.files?.some(nf => nf.id === f.id))
+      .map(f => {
+        const serverFile = newState.files?.find(nf => nf.id === f.id);
+        return serverFile || f;
+      });
+    store.files = [...existingFiles, ...updatedFiles, ...newFiles];
+  }
+
+  // Merge folders instead of replacing to preserve optimistic updates
+  if (newState.folders) {
+    const existingFolderIds = new Set(store.folders.map(f => f.id));
+    const newFolders = newState.folders.filter(f => f.id && !existingFolderIds.has(f.id));
+    // Keep existing folders that are not in newState (optimistic updates) and merge with server data
+    const existingFolders = store.folders.filter(f => !newState.folders?.some(nf => nf.id === f.id));
+    // Update existing folders with server data if they exist in newState
+    const updatedFolders = store.folders
+      .filter(f => newState.folders?.some(nf => nf.id === f.id))
+      .map(f => {
+        const serverFolder = newState.folders?.find(nf => nf.id === f.id);
+        return serverFolder || f;
+      });
+    store.folders = [...existingFolders, ...updatedFolders, ...newFolders];
+  }
 }
 
 export type Store = typeof store;
