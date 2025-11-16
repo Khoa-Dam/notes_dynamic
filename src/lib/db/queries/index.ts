@@ -26,9 +26,9 @@ export {
   createFile,
   deleteFile,
   deleteFileFromDb,
+  getFileById,
   getFiles,
   getFilesFromDb,
   updateFile,
   updateFileInDb,
 } from "./file";
-export { getUserSubscription } from "./subscription";
