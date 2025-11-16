@@ -11,7 +11,6 @@ import { z } from "zod";
 import type { User } from "next-auth";
 
 import { EmojiPicker } from "@/components/emoji-picker";
-import { useSubscriptionModal } from "@/components/subscription-modal-provider";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -30,11 +29,13 @@ const workspaceSchema = z.object({
 
 type FormData = z.infer<typeof workspaceSchema>;
 
-type WorkspaceFormProps = { user: User };
+type WorkspaceFormProps = {
+  user: User;
+  onSubmit?: () => void;
+};
 
-export function WorkspaceForm({ user }: WorkspaceFormProps) {
+export function WorkspaceForm({ user, onSubmit }: WorkspaceFormProps) {
   const router = useRouter();
-  const { subscription } = useSubscriptionModal();
 
   const [selectedEmoji, setSelectedEmoji] = React.useState("💼");
 
@@ -54,6 +55,7 @@ export function WorkspaceForm({ user }: WorkspaceFormProps) {
       {
         loading: `Creating your workspace "${name}"`,
         success: (data) => {
+          onSubmit?.();
           router.replace(`/dashboard/${data.id}`);
           return `Your workspace "${name}" was created successfully.`;
         },
@@ -94,20 +96,17 @@ export function WorkspaceForm({ user }: WorkspaceFormProps) {
           )}
         />
 
-        {subscription?.status !== "active" && (
-          <small className="block pt-4 text-center text-xs text-muted-foreground">
-            To customize your workspace, you need to be on a Pro Plan
-          </small>
-        )}
         <div className="flex pt-4">
           <Button
             type="submit"
             disabled={form.formState.isSubmitting}
             className="ml-auto w-40 shadow-md"
           >
-            {form.formState.isSubmitting ?
+            {form.formState.isSubmitting ? (
               <Loader2 className="size-4 animate-spin" />
-            : "Create workspace"}
+            ) : (
+              "Create workspace"
+            )}
           </Button>
         </div>
       </form>
