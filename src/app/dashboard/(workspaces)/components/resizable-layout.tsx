@@ -4,7 +4,6 @@ import React from "react";
 import { setCookie } from "cookies-next";
 
 import { Sidebar } from "@/components/sidebar/sidebar";
-import { Navbar } from "@/components/site-header/navbar";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -60,7 +59,6 @@ export function ResizableLayout(props: ResizableLayoutProps) {
       <ResizableHandle withHandle className="hidden lg:flex" />
 
       <ResizablePanel defaultSize={defaultLayout[1]}>
-        <Navbar />
         <main className="overflow-auto">{children}</main>
       </ResizablePanel>
     </ResizablePanelGroup>
