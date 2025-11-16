@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Check,
   ChevronDown,
@@ -39,7 +39,6 @@ import {
 } from "@/lib/db/queries";
 import { cn, currentlyInDev, isAppleDevice } from "@/lib/utils";
 import { EmojiPicker } from "../emoji-picker";
-import { useSubscriptionModal } from "../subscription-modal-provider";
 import {
   Accordion,
   AccordionContent,
@@ -65,7 +64,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export function Folders() {
   const pathname = usePathname();
-  const { setOpen, subscription } = useSubscriptionModal();
+  const router = useRouter();
 
   const {
     files: stateFiles,
@@ -89,34 +88,10 @@ export function Folders() {
   const [selectedEmoji, setSelectedEmoji] = useState("");
 
   function createFolderToggle() {
-    if (subscription?.status !== "active" && stateFolders.length >= 3) {
-      const description =
-        stateFolders.length === folders.length ?
-          "You have reached the maximum number of folders."
-        : "You have reached the maximum number of folders. Try clearing the trash to create more folders.";
-
-      toast.error("Something went wrong", { description });
-
-      setOpen(true);
-      return;
-    }
-
     setIsCreatingFolder((prev) => !prev);
   }
 
   function createFileToggle(folderId: string) {
-    if (
-      subscription?.status !== "active" &&
-      files.filter((f) => f.folderId === folderId).length >= 3
-    ) {
-      toast.error("Something went wrong", {
-        description: "You have reached the maximum number of files.",
-      });
-
-      setOpen(true);
-      return;
-    }
-
     setCreatingFiles((prev) => {
       if (prev.includes(folderId)) {
         return prev.filter((id) => id !== folderId);
@@ -134,20 +109,28 @@ export function Folders() {
       return;
     }
 
+    const tempId = uuid();
     const newFolder: Folder = {
-      id: uuid(),
+      id: tempId,
       title: folderName,
-      iconId: selectedEmoji,
+      iconId: selectedEmoji || "📁",
       workspaceId: pathname.split("/")[2],
+      data: null,
+      inTrash: false,
     };
 
     addFolder(newFolder);
 
-    toast.promise(createFolder(newFolder), {
-      loading: "Creating folder...",
-      success: "Folder created.",
-      error: "Something went wrong! Unable to create folder.",
-    });
+    try {
+      const createdFolder = await createFolder(newFolder);
+      // Update store with server data (includes createdAt, etc.)
+      updateFolder(createdFolder);
+      toast.success("Folder created.");
+      router.refresh();
+    } catch (error) {
+      deleteFolder(tempId);
+      toast.error("Something went wrong! Unable to create folder.");
+    }
 
     setSelectedEmoji("");
     setFolderName("Untitled");
@@ -165,21 +148,29 @@ export function Folders() {
       return;
     }
 
+    const tempId = uuid();
     const newFile: File = {
-      id: uuid(),
+      id: tempId,
       title: fileName,
-      iconId: selectedEmoji,
+      iconId: selectedEmoji || "📄",
       folderId,
       workspaceId: pathname.split("/")[2],
+      data: null,
+      inTrash: false,
     };
 
     addFile(newFile);
 
-    toast.promise(createFile(newFile), {
-      loading: "Creating file...",
-      success: "File created.",
-      error: "Something went wrong! Unable to create file.",
-    });
+    try {
+      const createdFile = await createFile(newFile);
+      // Update store with server data (includes createdAt, etc.)
+      updateFile(createdFile);
+      toast.success("File created.");
+      router.refresh();
+    } catch (error) {
+      deleteFile(tempId);
+      toast.error("Something went wrong! Unable to create file.");
+    }
 
     setSelectedEmoji("");
     setFileName("Untitled");
@@ -198,11 +189,16 @@ export function Folders() {
     const updatedFile: File = { ...file, inTrash: true };
     updateFile(updatedFile);
 
-    toast.promise(updateFileInDb(updatedFile), {
-      loading: "Moving file to trash...",
-      success: "File moved to trash.",
-      error: "Something went wrong! Unable to move file to trash.",
-    });
+    toast.promise(
+      updateFileInDb(updatedFile).then(() => {
+        router.refresh();
+      }),
+      {
+        loading: "Moving file to trash...",
+        success: "File moved to trash.",
+        error: "Something went wrong! Unable to move file to trash.",
+      }
+    );
   }
 
   async function moveFolderToTrash(folderId: string) {
@@ -215,31 +211,48 @@ export function Folders() {
 
     const updatedFolder: Folder = { ...folder, inTrash: true };
     updateFolder(updatedFolder);
-    toast.promise(updateFolderInDb({ ...folder, inTrash: true }), {
-      loading: "Moving folder to trash...",
-      success: "Folder moved to trash.",
-      error: "Something went wrong! Unable to move folder to trash.",
-    });
+    toast.promise(
+      updateFolderInDb({ ...folder, inTrash: true }).then(() => {
+        router.refresh();
+      }),
+      {
+        loading: "Moving folder to trash...",
+        success: "Folder moved to trash.",
+        error: "Something went wrong! Unable to move folder to trash.",
+      }
+    );
   }
 
   async function deleteFileHandler(fileId: string) {
+    const file = files.find((f) => f.id === fileId);
+    if (!file) return;
+
     deleteFile(fileId);
 
-    toast.promise(deleteFileFromDb(fileId), {
-      loading: "Deleting file...",
-      success: "File deleted.",
-      error: "Something went wrong! Unable to delete file.",
-    });
+    try {
+      await deleteFileFromDb(fileId);
+      toast.success("File deleted.");
+      router.refresh();
+    } catch (error) {
+      addFile(file);
+      toast.error("Something went wrong! Unable to delete file.");
+    }
   }
 
   async function deleteFolderHandler(folderId: string) {
+    const folder = folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
     deleteFolder(folderId);
 
-    toast.promise(deleteFolderFromDb(folderId), {
-      loading: "Deleting folder...",
-      success: "Folder deleted.",
-      error: "Something went wrong! Unable to delete folder.",
-    });
+    try {
+      await deleteFolderFromDb(folderId);
+      toast.success("Folder deleted.");
+      router.refresh();
+    } catch (error) {
+      addFolder(folder);
+      toast.error("Something went wrong! Unable to delete folder.");
+    }
   }
 
   return (
@@ -254,10 +267,11 @@ export function Folders() {
               onClick={createFolderToggle}
               className="size-7 text-muted-foreground"
             >
-              {isCreatingFolder ?
+              {isCreatingFolder ? (
                 <X className="size-4 duration-300 animate-in spin-in-90" />
-              : <Plus className="size-[18px] duration-300 animate-out spin-out-90" />
-              }
+              ) : (
+                <Plus className="size-[18px] duration-300 animate-out spin-out-90" />
+              )}
             </Button>
           </TooltipTrigger>
 
@@ -268,7 +282,7 @@ export function Folders() {
       </div>
 
       <div className="-mb-2 flex grow flex-col gap-1 overflow-hidden">
-        {isCreatingFolder || folders.length ?
+        {isCreatingFolder || folders.length ? (
           <ScrollArea>
             <Accordion
               type="multiple"
@@ -285,9 +299,11 @@ export function Folders() {
                     getValue={setSelectedEmoji}
                     className="absolute inset-y-0 left-1 my-auto inline-flex size-7 items-center justify-center rounded-md hover:bg-muted"
                   >
-                    {!selectedEmoji ?
+                    {!selectedEmoji ? (
                       <FolderIcon className="size-4" />
-                    : selectedEmoji}
+                    ) : (
+                      selectedEmoji
+                    )}
                   </EmojiPicker>
 
                   <Input
@@ -322,18 +338,20 @@ export function Folders() {
                     <ContextMenu>
                       <ContextMenuTrigger>
                         <AccordionTrigger
-                          showIndicator={false}
                           className={cn(
                             buttonVariants({ size: "sm", variant: "ghost" }),
-                            "justify-start border-none hover:no-underline data-[state=open]:bg-secondary"
+                            "justify-start border-none hover:no-underline data-[state=open]:bg-secondary",
+                            "[&>svg]:hidden"
                           )}
                         >
                           <span className="mr-2">
-                            {iconId ?
+                            {iconId ? (
                               iconId
-                            : openedFolders.includes(id!) ?
+                            ) : openedFolders.includes(id!) ? (
                               <FolderOpen className="size-4 shrink-0" />
-                            : <FolderIcon className="size-4 shrink-0" />}
+                            ) : (
+                              <FolderIcon className="size-4 shrink-0" />
+                            )}
                           </span>
 
                           {title}
@@ -420,9 +438,11 @@ export function Folders() {
                             getValue={setSelectedEmoji}
                             className="absolute inset-y-0 left-1 my-auto inline-flex size-7 items-center justify-center rounded-md hover:bg-muted"
                           >
-                            {!selectedEmoji ?
+                            {!selectedEmoji ? (
                               <FileIcon className="size-4" />
-                            : selectedEmoji}
+                            ) : (
+                              selectedEmoji
+                            )}
                           </EmojiPicker>
 
                           <Input
@@ -445,7 +465,7 @@ export function Folders() {
                         </form>
                       )}
 
-                      {creatingFiles.includes(id!) || folderFiles.length ?
+                      {creatingFiles.includes(id!) || folderFiles.length ? (
                         folderFiles.map(
                           ({ id, title, iconId, workspaceId }) => (
                             <div
@@ -460,9 +480,11 @@ export function Folders() {
                                 className="flex w-full items-center gap-0.5"
                               >
                                 <span className="mr-2 shrink-0">
-                                  {iconId ?
+                                  {iconId ? (
                                     iconId
-                                  : <FileIcon className="size-4" />}
+                                  ) : (
+                                    <FileIcon className="size-4" />
+                                  )}
                                 </span>
                                 {title}
                               </Link>
@@ -530,14 +552,15 @@ export function Folders() {
                             </div>
                           )
                         )
-                      : <div className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed p-4 text-muted-foreground">
+                      ) : (
+                        <div className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed p-4 text-muted-foreground">
                           <FileX size={20} />
 
                           <p className="text-center text-sm">
                             You don&apos;t have any file yet.
                           </p>
                         </div>
-                      }
+                      )}
                     </AccordionContent>
                   </AccordionItem>
                 );
@@ -545,13 +568,14 @@ export function Folders() {
             </Accordion>
             <ScrollBar />
           </ScrollArea>
-        : <div className="flex h-full flex-col items-center justify-center gap-4 px-4 text-muted-foreground">
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center gap-4 px-4 text-muted-foreground">
             <FolderX size={32} />
             <p className="text-center text-sm">
               You don&apos;t have any folders yet.
             </p>
           </div>
-        }
+        )}
       </div>
     </>
   );

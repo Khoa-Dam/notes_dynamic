@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Check,
   Edit2,
@@ -30,7 +30,6 @@ import {
 } from "@/lib/db/queries";
 import { cn, currentlyInDev } from "@/lib/utils";
 import { EmojiPicker } from "../emoji-picker";
-import { useSubscriptionModal } from "../subscription-modal-provider";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,7 +55,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export function FoldersCollapsed() {
   const pathname = usePathname();
-  const { setOpen, subscription } = useSubscriptionModal();
+  const router = useRouter();
 
   const {
     files: stateFiles,
@@ -78,31 +77,11 @@ export function FoldersCollapsed() {
   const [creatingFiles, setCreatingFiles] = useState<string[]>([]);
 
   function createFolderToggle() {
-    if (subscription?.status !== "active" && stateFolders.length >= 3) {
-      const description =
-        stateFolders.length === folders.length ?
-          "You have reached the maximum number of folders."
-        : "You have reached the maximum number of folders. Try clearing the trash to create more folders.";
-
-      toast.error("Something went wrong", { description });
-
-      setOpen(true);
-      return;
-    }
+    // No subscription check needed
   }
 
   function createFileToggle(folderId: string) {
-    if (
-      subscription?.status !== "active" &&
-      files.filter((f) => f.folderId === folderId).length >= 3
-    ) {
-      toast.error("Something went wrong", {
-        description: "You have reached the maximum number of files.",
-      });
-
-      setOpen(true);
-      return;
-    }
+    // No subscription check needed
 
     setCreatingFiles((prev) => {
       if (prev.includes(folderId)) {
@@ -116,23 +95,33 @@ export function FoldersCollapsed() {
   async function createFolderHandler(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    if (folderName.length < 3) {
+      toast.warning("Folder name must be at least 3 characters long.");
+      return;
+    }
+
+    const tempId = uuid();
     const newFolder: Folder = {
-      id: uuid(),
+      id: tempId,
       title: folderName,
-      iconId: selectedEmoji,
+      iconId: selectedEmoji || "📁",
       workspaceId: pathname.split("/")[2],
+      data: null,
+      inTrash: false,
     };
 
     addFolder(newFolder);
 
-    toast.promise(createFolder(newFolder), {
-      loading: "Creating folder...",
-      success: "Folder created.",
-      error: () => {
-        deleteFolder(newFolder.id!);
-        return "Something went wrong! Unable to create folder.";
-      },
-    });
+    try {
+      const createdFolder = await createFolder(newFolder);
+      // Update store with server data (includes createdAt, etc.)
+      updateFolder(createdFolder);
+      toast.success("Folder created.");
+      router.refresh();
+    } catch (error) {
+      deleteFolder(tempId);
+      toast.error("Something went wrong! Unable to create folder.");
+    }
 
     setSelectedEmoji("");
     setFolderName("Untitled");
@@ -149,21 +138,29 @@ export function FoldersCollapsed() {
       return;
     }
 
+    const tempId = uuid();
     const newFile: File = {
-      id: uuid(),
+      id: tempId,
       title: fileName,
-      iconId: selectedEmoji,
+      iconId: selectedEmoji || "📄",
       folderId,
       workspaceId: pathname.split("/")[2],
+      data: null,
+      inTrash: false,
     };
 
     addFile(newFile);
 
-    toast.promise(createFile(newFile), {
-      loading: "Creating file...",
-      success: "File created.",
-      error: "Something went wrong! Unable to create file.",
-    });
+    try {
+      const createdFile = await createFile(newFile);
+      // Update store with server data (includes createdAt, etc.)
+      updateFile(createdFile);
+      toast.success("File created.");
+      router.refresh();
+    } catch (error) {
+      deleteFile(tempId);
+      toast.error("Something went wrong! Unable to create file.");
+    }
 
     setSelectedEmoji("");
     setFileName("Untitled");
@@ -182,11 +179,16 @@ export function FoldersCollapsed() {
     const updatedFile: File = { ...file, inTrash: true };
     updateFile(updatedFile);
 
-    toast.promise(updateFileInDb(updatedFile), {
-      loading: "Moving file to trash...",
-      success: "File moved to trash.",
-      error: "Something went wrong! Unable to move file to trash.",
-    });
+    toast.promise(
+      updateFileInDb(updatedFile).then(() => {
+        router.refresh();
+      }),
+      {
+        loading: "Moving file to trash...",
+        success: "File moved to trash.",
+        error: "Something went wrong! Unable to move file to trash.",
+      }
+    );
   }
 
   async function moveFolderToTrash(folderId: string) {
@@ -200,39 +202,48 @@ export function FoldersCollapsed() {
     const updatedFolder: Folder = { ...folder, inTrash: true };
     updateFolder(updatedFolder);
 
-    toast.promise(updateFolderInDb(updatedFolder), {
-      loading: "Moving folder to trash...",
-      success: "Folder moved to trash.",
-      error: "Something went wrong! Unable to move folder to trash.",
-    });
+    toast.promise(
+      updateFolderInDb(updatedFolder).then(() => {
+        router.refresh();
+      }),
+      {
+        loading: "Moving folder to trash...",
+        success: "Folder moved to trash.",
+        error: "Something went wrong! Unable to move folder to trash.",
+      }
+    );
   }
 
   async function deleteFileHandler(fileId: string) {
     const file = files.find((f) => f.id === fileId);
+    if (!file) return;
+
     deleteFile(fileId);
 
-    toast.promise(deleteFileFromDb(fileId), {
-      loading: "Deleting file...",
-      success: "File deleted permanently.",
-      error: () => {
-        addFile(file!);
-        return "Something went wrong! Unable to delete file.";
-      },
-    });
+    try {
+      await deleteFileFromDb(fileId);
+      toast.success("File deleted permanently.");
+      router.refresh();
+    } catch (error) {
+      addFile(file);
+      toast.error("Something went wrong! Unable to delete file.");
+    }
   }
 
   async function deleteFolderHandler(folderId: string) {
     const folder = folders.find((f) => f.id === folderId);
+    if (!folder) return;
+
     deleteFolder(folderId);
 
-    toast.promise(deleteFolderFromDb(folderId), {
-      loading: "Deleting folder...",
-      success: "Folder deleted permanently.",
-      error: () => {
-        addFolder(folder!);
-        return "Something went wrong! Unable to delete folder.";
-      },
-    });
+    try {
+      await deleteFolderFromDb(folderId);
+      toast.success("Folder deleted permanently.");
+      router.refresh();
+    } catch (error) {
+      addFolder(folder);
+      toast.error("Something went wrong! Unable to delete folder.");
+    }
   }
 
   return (
@@ -255,9 +266,11 @@ export function FoldersCollapsed() {
                   getValue={setSelectedEmoji}
                   className={buttonVariants({ size: "sm", variant: "ghost" })}
                 >
-                  {!selectedEmoji ?
+                  {!selectedEmoji ? (
                     <FolderIcon className="size-5" />
-                  : selectedEmoji}
+                  ) : (
+                    selectedEmoji
+                  )}
                 </EmojiPicker>
 
                 <Input
@@ -293,17 +306,21 @@ export function FoldersCollapsed() {
                 showIndicator={false}
                 className="size-10 p-0"
               >
-                {!iconId ?
+                {!iconId ? (
                   <FolderIcon className="size-5" />
-                : <span className="text-lg">{iconId}</span>}
+                ) : (
+                  <span className="text-lg">{iconId}</span>
+                )}
               </NavigationMenuTrigger>
 
               <NavigationMenuContent className="min-w-80 space-y-4 p-4">
                 <header className="flex items-center justify-between">
                   <h3 className="flex text-lg font-semibold leading-none tracking-tight">
-                    {iconId ?
+                    {iconId ? (
                       <span className="text-lg">{iconId}</span>
-                    : <FolderIcon className="size-5" />}
+                    ) : (
+                      <FolderIcon className="size-5" />
+                    )}
                     <span className="ml-2">{title}</span>
                   </h3>
 
@@ -315,15 +332,17 @@ export function FoldersCollapsed() {
                           onClick={() => createFileToggle(id!)}
                           className="size-7 p-0 text-muted-foreground"
                         >
-                          {creatingFiles.includes(id!) ?
+                          {creatingFiles.includes(id!) ? (
                             <X className="size-4" />
-                          : <FilePlus2 className="size-4" />}
+                          ) : (
+                            <FilePlus2 className="size-4" />
+                          )}
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {creatingFiles.includes(id!) ?
-                          "Cancel creating file"
-                        : "Create file"}
+                        {creatingFiles.includes(id!)
+                          ? "Cancel creating file"
+                          : "Create file"}
                       </TooltipContent>
                     </Tooltip>
 
@@ -402,9 +421,11 @@ export function FoldersCollapsed() {
                           getValue={setSelectedEmoji}
                           className="absolute inset-y-0 left-1 my-auto inline-flex size-7 items-center justify-center rounded-md hover:bg-muted"
                         >
-                          {!selectedEmoji ?
+                          {!selectedEmoji ? (
                             <FileIcon className="size-4" />
-                          : selectedEmoji}
+                          ) : (
+                            selectedEmoji
+                          )}
                         </EmojiPicker>
 
                         <Input
@@ -427,7 +448,7 @@ export function FoldersCollapsed() {
                       </form>
                     )}
 
-                    {creatingFiles.includes(id!) || folderFiles.length ?
+                    {creatingFiles.includes(id!) || folderFiles.length ? (
                       folderFiles.map(({ id, title, iconId, workspaceId }) => (
                         <div
                           key={id}
@@ -444,9 +465,11 @@ export function FoldersCollapsed() {
                             className="flex w-full items-center gap-0.5"
                           >
                             <span className="mr-2 shrink-0">
-                              {iconId ?
+                              {iconId ? (
                                 iconId
-                              : <FileIcon className="size-4" />}
+                              ) : (
+                                <FileIcon className="size-4" />
+                              )}
                             </span>
                             {title}
                           </Link>
@@ -513,14 +536,15 @@ export function FoldersCollapsed() {
                           </AlertDialog>
                         </div>
                       ))
-                    : <div className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed p-4 text-muted-foreground">
+                    ) : (
+                      <div className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed p-4 text-muted-foreground">
                         <FileX size={20} />
 
                         <p className="text-center text-sm">
                           You don&apos;t have any file yet.
                         </p>
                       </div>
-                    }
+                    )}
                   </div>
 
                   <ScrollBar />
