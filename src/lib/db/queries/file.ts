@@ -1,6 +1,6 @@
 "use server";
 
-import { unstable_cache as cache, revalidateTag } from "next/cache";
+import { unstable_cache as cache, revalidateTag, revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { validate } from "uuid";
 
@@ -78,6 +78,8 @@ export async function updateFile(file: File) {
     throw new Error("Failed to update file");
   } finally {
     revalidateTag("get_files", {});
+    revalidateTag("get_file_by_id", {});
+    revalidatePath("/dashboard", "layout");
   }
 }
 
@@ -99,7 +101,41 @@ export async function deleteFile(fileId: string) {
   } catch (e) {
     console.error((e as Error).message);
     throw new Error("Failed to delete file");
+  } finally {
+    revalidateTag("get_files", {});
+    revalidateTag("get_file_by_id", {});
+    revalidatePath("/dashboard", "layout");
   }
 }
 
 export const deleteFileFromDb = deleteFile;
+
+/**
+ * Get file by ID
+ * @param fileId - File ID
+ * @returns File object
+ */
+export const getFileById = cache(
+  async (fileId: string) => {
+    const isValid = validate(fileId);
+
+    if (!isValid) {
+      throw new Error("Invalid file ID");
+    }
+
+    try {
+      const [file] = await db
+        .select()
+        .from(files)
+        .where(eq(files.id, fileId))
+        .limit(1);
+
+      return file;
+    } catch (e) {
+      console.error((e as Error).message);
+      throw new Error("Failed to fetch file from the database");
+    }
+  },
+  ["get_file_by_id"],
+  { tags: ["get_file_by_id"] }
+);

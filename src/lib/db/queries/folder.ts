@@ -1,6 +1,6 @@
 "use server";
 
-import { unstable_cache as cache, revalidateTag } from "next/cache";
+import { unstable_cache as cache, revalidateTag, revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { validate } from "uuid";
 
@@ -24,6 +24,7 @@ export async function createFolder(folder: Folder) {
     throw new Error("Failed to create folders");
   } finally {
     revalidateTag("get_folders", {});
+    revalidatePath("/dashboard", "layout");
   }
 }
 
@@ -80,6 +81,7 @@ export async function updateFolder(folder: Folder) {
     throw new Error("Failed to update folder.");
   } finally {
     revalidateTag("get_folders", {});
+    revalidatePath("/dashboard", "layout");
   }
 }
 
@@ -101,6 +103,9 @@ export async function deleteFolder(folderId: string) {
   } catch (error) {
     console.error((error as Error).message);
     throw new Error("Failed to delete folder.");
+  } finally {
+    revalidateTag("get_folders", {});
+    revalidatePath("/dashboard", "layout");
   }
 }
 
