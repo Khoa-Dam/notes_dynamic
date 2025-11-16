@@ -32,7 +32,7 @@ export function SiteFooter() {
           <div className="col-span-full flex items-center justify-between gap-4 md:flex-col">
             <Link
               href="/"
-              className="flex gap-2 font-handwriting text-xl lowercase [text-shadow:_0_2px_0_#e1e1e1] dark:[text-shadow:none]"
+              className="flex gap-2 font-handwriting text-xl lowercase [text-shadow:0_2px_0_#e1e1e1] dark:text-shadow-none"
             >
               <Logo size={28} />
               {siteConfig.name}
