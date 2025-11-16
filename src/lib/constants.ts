@@ -12,97 +12,97 @@ export const USERS = [
   {
     name: "Alice",
     message:
-      "Lipi has been a game-changer for our team. With its reliable end-to-end testing, we catch bugs early, leading to faster development cycles and improved collaboration.",
+      "Notes Dynamic has been a game-changer for our team. With its reliable end-to-end testing, we catch bugs early, leading to faster development cycles and improved collaboration.",
   },
   {
     name: "Bob",
     message:
-      "I used to spend hours debugging frontend issues, but Lipi simplified everything. Now, I'm more productive, and my colleagues can trust our code thanks to Lipi.",
+      "I used to spend hours debugging frontend issues, but Notes Dynamic simplified everything. Now, I'm more productive, and my colleagues can trust our code thanks to Notes Dynamic.",
   },
   {
     name: "Charlie",
     message:
-      "Lipi has transformed the way we work. Our QA and development teams are on the same page, and our productivity has skyrocketed. It's a must-have tool.",
+      "Notes Dynamic has transformed the way we work. Our QA and development teams are on the same page, and our productivity has skyrocketed. It's a must-have tool.",
   },
   {
     name: "David",
     message:
-      "I was skeptical at first, but Lipi exceeded my expectations. Our project timelines have improved, and collaboration between teams is seamless.",
+      "I was skeptical at first, but Notes Dynamic exceeded my expectations. Our project timelines have improved, and collaboration between teams is seamless.",
   },
   {
     name: "Ella",
     message:
-      "Lipi made writing and running tests a breeze. Our team's productivity has never been higher, and we're delivering more reliable software.",
+      "Notes Dynamic made writing and running tests a breeze. Our team's productivity has never been higher, and we're delivering more reliable software.",
   },
   {
     name: "Frank",
     message:
-      "Thanks to Lipi, we've eliminated testing bottlenecks. Our developers and testers collaborate effortlessly, resulting in quicker releases.",
+      "Thanks to Notes Dynamic, we've eliminated testing bottlenecks. Our developers and testers collaborate effortlessly, resulting in quicker releases.",
   },
   {
     name: "Grace",
     message:
-      "Lipi has improved our development process significantly. We now have more time for innovation, and our products are of higher quality.",
+      "Notes Dynamic has improved our development process significantly. We now have more time for innovation, and our products are of higher quality.",
   },
   {
     name: "Hank",
     message:
-      "Lipi's user-friendly interface made it easy for our non-technical team members to contribute to testing. Our workflow is much more efficient now.",
+      "Notes Dynamic's user-friendly interface made it easy for our non-technical team members to contribute to testing. Our workflow is much more efficient now.",
   },
   {
     name: "Ivy",
     message:
-      "Our team's collaboration improved immensely with Lipi. We catch issues early, leading to less friction and quicker feature deployments.",
+      "Our team's collaboration improved immensely with Notes Dynamic. We catch issues early, leading to less friction and quicker feature deployments.",
   },
   {
     name: "Jack",
     message:
-      "Lipi's robust testing capabilities have elevated our development standards. We work more harmoniously, and our releases are more reliable.",
+      "Notes Dynamic's robust testing capabilities have elevated our development standards. We work more harmoniously, and our releases are more reliable.",
   },
   {
     name: "Katherine",
     message:
-      "Lipi is a lifesaver for our cross-functional teams. We're more productive, and there's a shared sense of responsibility for product quality.",
+      "Notes Dynamic is a lifesaver for our cross-functional teams. We're more productive, and there's a shared sense of responsibility for product quality.",
   },
   {
     name: "Liam",
     message:
-      "Lipi has helped us maintain high standards of quality. Our team's collaboration has improved, resulting in faster development cycles.",
+      "Notes Dynamic has helped us maintain high standards of quality. Our team's collaboration has improved, resulting in faster development cycles.",
   },
   {
     name: "Mia",
     message:
-      "Lipi is a powerful tool that improved our productivity and collaboration. It's now an integral part of our development process.",
+      "Notes Dynamic is a powerful tool that improved our productivity and collaboration. It's now an integral part of our development process.",
   },
   {
     name: "Nathan",
     message:
-      "Lipi's user-friendly interface and detailed reporting have made testing a breeze. Our team's productivity is at an all-time high.",
+      "Notes Dynamic's user-friendly interface and detailed reporting have made testing a breeze. Our team's productivity is at an all-time high.",
   },
   {
     name: "Olivia",
     message:
-      "We saw immediate benefits in terms of productivity and collaboration after adopting Lipi. It's an essential tool for our development workflow.",
+      "We saw immediate benefits in terms of productivity and collaboration after adopting Notes Dynamic. It's an essential tool for our development workflow.",
   },
   {
     name: "Paul",
     message:
-      "Lipi has streamlined our testing process and brought our teams closer. We're more efficient and deliver better results.",
+      "Notes Dynamic has streamlined our testing process and brought our teams closer. We're more efficient and deliver better results.",
   },
   {
     name: "Quinn",
     message:
-      "Lipi has been a game-changer for us. Our productivity and collaboration have improved significantly, leading to better software.",
+      "Notes Dynamic has been a game-changer for us. Our productivity and collaboration have improved significantly, leading to better software.",
   },
   {
     name: "Rachel",
     message:
-      "Thanks to Lipi, our testing process is now a seamless part of our development cycle. Our teams collaborate effortlessly.",
+      "Thanks to Notes Dynamic, our testing process is now a seamless part of our development cycle. Our teams collaborate effortlessly.",
   },
   {
     name: "Sam",
     message:
-      "Lipi is a fantastic tool that has revolutionized our workflow. Our productivity and collaboration have reached new heights.",
+      "Notes Dynamic is a fantastic tool that has revolutionized our workflow. Our productivity and collaboration have reached new heights.",
   },
 ];
 
