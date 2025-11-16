@@ -1,6 +1,6 @@
 {
-  "name": "Lipi",
-  "short_name": "Lipi",
+  "name": "dynamic_notes",
+  "short_name": "dynamic_notes",
   "start_url": "/",
   "icons": [
     { "src": "/icon-192.png", "type": "image/png", "sizes": "192x192" },
