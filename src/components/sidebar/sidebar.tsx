@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutGrid, SettingsIcon, Trash2, User2 } from "lucide-react";
+import { LayoutGrid, Trash2, User2 } from "lucide-react";
 
 import type { LucideIcon } from "lucide-react";
 
@@ -7,7 +7,6 @@ import { siteConfig } from "@/config/site";
 import { useAppState } from "@/hooks/use-app-state";
 import { cn } from "@/lib/utils";
 import { Logo } from "../icons";
-import { Settings } from "../settings";
 import { SignOut } from "../sign-out";
 import { Trash } from "../trash";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -15,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Separator } from "../ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { Workspaces } from "../workspaces";
+import { ThemeToggleGroup } from "../site-footer/theme-toggle-group";
 import { Folders } from "./folders";
 import { FoldersCollapsed } from "./folders-collapsed";
 import { NavDialog } from "./nav-dialog";
@@ -36,12 +36,6 @@ const navItems: NavItem[] = [
     description: "Manage your workspaces",
     icon: LayoutGrid,
     content: Workspaces,
-  },
-  {
-    title: "Settings",
-    description: "Manage your settings",
-    icon: SettingsIcon,
-    content: Settings,
   },
   {
     title: "Trash",
@@ -116,7 +110,7 @@ export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
 
         <div
           className={cn(
-            "absolute z-10 transition-all animate-in fade-in-0 zoom-in-0 slide-in-from-bottom-full [animation-duration:500ms]",
+            "absolute z-10 transition-all animate-in fade-in-0 zoom-in-0 slide-in-from-bottom-full animation-duration-[500ms]",
             isCollapsed
               ? "inset-x-0 bottom-1"
               : "inset-x-2 bottom-2 flex items-center gap-2 rounded-full border bg-background/10 p-2 shadow backdrop-blur-md hover:shadow-xl"
@@ -137,21 +131,28 @@ export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
                 </Avatar>
               </PopoverTrigger>
 
-              <PopoverContent side="right" className="flex justify-between">
-                <div className="w-full font-medium">
-                  <p className="line-clamp-1 text-sm">
-                    {user?.name ?? "Update your profile"}
-                  </p>
-                  <p className="line-clamp-1 text-xs text-muted-foreground">
-                    {user?.email}
-                  </p>
+              <PopoverContent side="right" className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-full font-medium">
+                    <p className="line-clamp-1 text-sm">
+                      {user?.name ?? "Update your profile"}
+                    </p>
+                    <p className="line-clamp-1 text-xs text-muted-foreground">
+                      {user?.email}
+                    </p>
+                  </div>
+
+                  <SignOut
+                    size="icon"
+                    variant="ghost"
+                    className="ml-auto shrink-0 rounded-full text-muted-foreground"
+                  />
                 </div>
 
-                <SignOut
-                  size="icon"
-                  variant="ghost"
-                  className="ml-auto shrink-0 rounded-full text-muted-foreground"
-                />
+                <div className="flex items-center justify-between border-t pt-4">
+                  <span className="text-xs text-muted-foreground">Theme</span>
+                  <ThemeToggleGroup />
+                </div>
               </PopoverContent>
             </Popover>
           ) : (
@@ -168,6 +169,8 @@ export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
                   {user?.name ?? "Update  profile"}
                 </p>
               </div>
+
+              <ThemeToggleGroup className="shrink-0" />
 
               <SignOut
                 size="icon"

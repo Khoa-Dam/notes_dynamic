@@ -81,24 +81,91 @@ export function Folders() {
   const folders = stateFolders.filter((folder) => !folder.inTrash);
 
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
-  const [creatingFiles, setCreatingFiles] = useState<string[]>([]);
   const [openedFolders, setOpenedFolders] = useState<string[]>([]);
   const [folderName, setFolderName] = useState("Untitled");
-  const [fileName, setFileName] = useState("Untitled");
   const [selectedEmoji, setSelectedEmoji] = useState("");
+
+  // Helper function to create initial content with icon and header
+  function createInitialContent(icon: string = "📄"): string {
+    const initialBlocks = [
+      {
+        id: crypto.randomUUID(),
+        type: "paragraph" as const,
+        props: {
+          textColor: "default",
+          backgroundColor: "default",
+          textAlignment: "left",
+        },
+        content: [
+          {
+            type: "text",
+            text: icon,
+            styles: {},
+          },
+        ],
+        children: [],
+      },
+      {
+        id: crypto.randomUUID(),
+        type: "heading" as const,
+        props: {
+          level: 1,
+          textColor: "default",
+          backgroundColor: "default",
+          textAlignment: "left",
+        },
+        content: [
+          {
+            type: "text",
+            text: "New page",
+            styles: {},
+          },
+        ],
+        children: [],
+      },
+    ];
+    return JSON.stringify(initialBlocks);
+  }
 
   function createFolderToggle() {
     setIsCreatingFolder((prev) => !prev);
   }
 
-  function createFileToggle(folderId: string) {
-    setCreatingFiles((prev) => {
-      if (prev.includes(folderId)) {
-        return prev.filter((id) => id !== folderId);
-      }
+  async function createFileToggle(folderId: string) {
+    const tempId = uuid();
+    const initialContent = createInitialContent();
+    const newFile: File = {
+      id: tempId,
+      title: "New page",
+      iconId: "📄",
+      folderId,
+      workspaceId: pathname.split("/")[2],
+      data: initialContent,
+      inTrash: false,
+    };
 
-      return [...prev, folderId];
-    });
+    // Add file optimistically
+    addFile(newFile);
+
+    try {
+      const createdFile = await createFile(newFile);
+      // Remove temp file and add the real one from server
+      deleteFile(tempId);
+      addFile(createdFile);
+      toast.success("File created.");
+
+      // Navigate to the new file
+      router.push(`/dashboard/${pathname.split("/")[2]}/${createdFile.id}`);
+
+      // Delay refresh to allow cache to update
+      setTimeout(() => {
+        router.refresh();
+      }, 100);
+    } catch (error) {
+      // Remove temp file on error
+      deleteFile(tempId);
+      toast.error("Something went wrong! Unable to create file.");
+    }
   }
 
   async function createFolderHandler(e: React.FormEvent<HTMLFormElement>) {
@@ -113,21 +180,24 @@ export function Folders() {
     const newFolder: Folder = {
       id: tempId,
       title: folderName,
-      iconId: selectedEmoji || "📁",
+      iconId: selectedEmoji,
       workspaceId: pathname.split("/")[2],
       data: null,
       inTrash: false,
     };
 
+    // Add folder optimistically
     addFolder(newFolder);
 
     try {
       const createdFolder = await createFolder(newFolder);
-      // Update store with server data (includes createdAt, etc.)
-      updateFolder(createdFolder);
+      // Remove temp folder and add the real one from server
+      deleteFolder(tempId);
+      addFolder(createdFolder);
       toast.success("Folder created.");
       router.refresh();
     } catch (error) {
+      // Remove temp folder on error
       deleteFolder(tempId);
       toast.error("Something went wrong! Unable to create folder.");
     }
@@ -137,46 +207,6 @@ export function Folders() {
     setIsCreatingFolder(false);
   }
 
-  async function createFileHandler(
-    e: React.FormEvent<HTMLFormElement>,
-    folderId: string
-  ) {
-    e.preventDefault();
-
-    if (fileName.length < 3) {
-      toast.warning("File name must be at least 3 characters long.");
-      return;
-    }
-
-    const tempId = uuid();
-    const newFile: File = {
-      id: tempId,
-      title: fileName,
-      iconId: selectedEmoji || "📄",
-      folderId,
-      workspaceId: pathname.split("/")[2],
-      data: null,
-      inTrash: false,
-    };
-
-    addFile(newFile);
-
-    try {
-      const createdFile = await createFile(newFile);
-      // Update store with server data (includes createdAt, etc.)
-      updateFile(createdFile);
-      toast.success("File created.");
-      router.refresh();
-    } catch (error) {
-      deleteFile(tempId);
-      toast.error("Something went wrong! Unable to create file.");
-    }
-
-    setSelectedEmoji("");
-    setFileName("Untitled");
-
-    setCreatingFiles((prev) => prev.filter((id) => id !== folderId));
-  }
 
   async function moveFileToTrash(fileId: string) {
     const file = files.find((f) => f.id === fileId);
@@ -312,7 +342,7 @@ export function Folders() {
                     onChange={(e) => setFolderName(e.target.value)}
                     className={cn(
                       "h-9 px-9",
-                      folderName.length < 3 && "!ring-destructive"
+                      folderName.length < 3 && "ring-destructive!"
                     )}
                   />
 
@@ -392,7 +422,7 @@ export function Folders() {
                             }
                           }}
                           onClick={() => moveFolderToTrash(id!)}
-                          className="cursor-pointer !text-red-500"
+                          className="cursor-pointer text-red-500!"
                         >
                           <Trash2 className="mr-2 size-4 shrink-0" />
                           Move to Trash
@@ -414,7 +444,7 @@ export function Folders() {
                             }
                           }}
                           onClick={() => deleteFolderHandler(id!)}
-                          className="cursor-pointer !text-red-500"
+                          className="cursor-pointer text-red-500!"
                         >
                           <Trash className="mr-2 size-4 shrink-0" />
                           Delete
@@ -426,46 +456,7 @@ export function Folders() {
                     </ContextMenu>
 
                     <AccordionContent className="pb-2 pl-2 pt-1">
-                      {creatingFiles.includes(id!) && (
-                        <form
-                          onSubmit={(e) => createFileHandler(e, id!)}
-                          className="relative mb-1 mr-1"
-                        >
-                          <EmojiPicker
-                            title="Select an emoji"
-                            side="right"
-                            align="start"
-                            getValue={setSelectedEmoji}
-                            className="absolute inset-y-0 left-1 my-auto inline-flex size-7 items-center justify-center rounded-md hover:bg-muted"
-                          >
-                            {!selectedEmoji ? (
-                              <FileIcon className="size-4" />
-                            ) : (
-                              selectedEmoji
-                            )}
-                          </EmojiPicker>
-
-                          <Input
-                            autoFocus
-                            value={fileName}
-                            onChange={(e) => setFileName(e.target.value)}
-                            className={cn(
-                              "my-1 h-9 px-9",
-                              fileName.length < 3 && "!ring-destructive"
-                            )}
-                          />
-
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="absolute inset-y-0 right-1 my-auto size-7 text-muted-foreground"
-                          >
-                            <Check className="size-4" />
-                          </Button>
-                        </form>
-                      )}
-
-                      {creatingFiles.includes(id!) || folderFiles.length ? (
+                      {folderFiles.length > 0 ? (
                         folderFiles.map(
                           ({ id, title, iconId, workspaceId }) => (
                             <div
