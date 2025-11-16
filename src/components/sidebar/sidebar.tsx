@@ -68,9 +68,9 @@ export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
         <div
           className={cn(
             "flex",
-            isCollapsed ?
-              "my-px h-14 border-b"
-            : "my-1 ml-4 mr-2 items-center gap-2"
+            isCollapsed
+              ? "my-px h-14 border-b"
+              : "my-1 ml-4 mr-2 items-center gap-2"
           )}
         >
           <Logo size={44} className={cn("shrink-0", isCollapsed && "m-auto")} />
@@ -83,7 +83,7 @@ export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
 
         <nav className="flex flex-col items-center justify-center gap-1 px-4">
           {navItems.map(({ title, description, icon, content: Content }) =>
-            isCollapsed ?
+            isCollapsed ? (
               <Tooltip key={title} delayDuration={0}>
                 <TooltipTrigger asChild>
                   <NavDialog
@@ -97,7 +97,8 @@ export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
                 </TooltipTrigger>
                 <TooltipContent side="right">{title}</TooltipContent>
               </Tooltip>
-            : <NavDialog
+            ) : (
+              <NavDialog
                 key={title}
                 title={title}
                 icon={icon}
@@ -105,24 +106,23 @@ export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
               >
                 <Content />
               </NavDialog>
+            )
           )}
         </nav>
 
         <Separator className={isCollapsed ? "block" : "hidden"} />
 
-        {isCollapsed ?
-          <FoldersCollapsed />
-        : <Folders />}
+        {isCollapsed ? <FoldersCollapsed /> : <Folders />}
 
         <div
           className={cn(
             "absolute z-10 transition-all animate-in fade-in-0 zoom-in-0 slide-in-from-bottom-full [animation-duration:500ms]",
-            isCollapsed ? "inset-x-0 bottom-1" : (
-              "inset-x-2 bottom-2 flex items-center gap-2 rounded-full border bg-background/10 p-2 shadow backdrop-blur-md hover:shadow-xl"
-            )
+            isCollapsed
+              ? "inset-x-0 bottom-1"
+              : "inset-x-2 bottom-2 flex items-center gap-2 rounded-full border bg-background/10 p-2 shadow backdrop-blur-md hover:shadow-xl"
           )}
         >
-          {isCollapsed ?
+          {isCollapsed ? (
             <Popover>
               <PopoverTrigger className="mx-auto flex rounded-full border p-0.5 shadow hover:shadow-xl">
                 <Avatar>
@@ -143,7 +143,7 @@ export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
                     {user?.name ?? "Update your profile"}
                   </p>
                   <p className="line-clamp-1 text-xs text-muted-foreground">
-                    Free plan
+                    {user?.email}
                   </p>
                 </div>
 
@@ -154,7 +154,8 @@ export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
                 />
               </PopoverContent>
             </Popover>
-          : <>
+          ) : (
+            <>
               <Avatar className="m-auto">
                 <AvatarImage src={user?.image ?? undefined} />
                 <AvatarFallback>
@@ -164,10 +165,7 @@ export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
 
               <div className="w-full font-medium">
                 <p className="line-clamp-1 text-sm">
-                  {user?.name ?? "Update your profile"}
-                </p>
-                <p className="line-clamp-1 text-xs text-muted-foreground">
-                  Free plan
+                  {user?.name ?? "Update  profile"}
                 </p>
               </div>
 
@@ -177,7 +175,7 @@ export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
                 className="ml-auto shrink-0 rounded-full text-muted-foreground"
               />
             </>
-          }
+          )}
         </div>
       </div>
     </aside>
