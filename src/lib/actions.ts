@@ -30,7 +30,7 @@ export async function createNewAccount(
     .insert(users)
     .values({ username: randomUUID(), email, password: hashedPassword });
 
-  redirect("/");
+  redirect("/dashboard");
 }
 
 export async function resetPassword(

@@ -60,15 +60,25 @@ export function LoginForm() {
     setIsSubmitting(true);
 
     try {
-      toast.promise(signIn("credentials", { ...formData }), {
-        loading: "Signing in...",
-        success: "You have been signed in.",
-        error: "Something went wrong.",
-        finally: () => setIsSubmitting(false),
+      const result = await signIn("credentials", {
+        ...formData,
+        redirect: true,
+        callbackUrl: "/dashboard",
       });
+
+      // If signIn returns an error (not redirect)
+      if (result?.error) {
+        toast.error("Invalid credentials. Please try again.");
+        setIsSubmitting(false);
+      }
+      // If successful, NextAuth will handle redirect automatically
     } catch (error) {
       const err = error as Error;
-      console.error(err.message);
+      // Check if it's a redirect error (should not show error for redirect)
+      if (!err.message.includes("NEXT_REDIRECT")) {
+        toast.error("Something went wrong. Please try again.");
+        setIsSubmitting(false);
+      }
     }
   }
 
@@ -97,7 +107,7 @@ export function LoginForm() {
                       aria-label={
                         isEmailMode ?
                           "Use Username instead"
-                        : "Use Email instead"
+                          : "Use Email instead"
                       }
                       tabIndex={-1}
                       type="button"
@@ -106,14 +116,14 @@ export function LoginForm() {
                     >
                       {isEmailMode ?
                         <AtSign className="size-5" />
-                      : <Mail className="size-5" />}
+                        : <Mail className="size-5" />}
                     </TooltipTrigger>
 
                     <TooltipContent>
                       <p className="text-xs">
                         {isEmailMode ?
                           "Use Username instead"
-                        : "Use Email instead"}
+                          : "Use Email instead"}
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -152,7 +162,7 @@ export function LoginForm() {
                     >
                       {isPassVisible ?
                         <EyeOff className="size-5" />
-                      : <Eye className="size-5" />}
+                        : <Eye className="size-5" />}
                     </TooltipTrigger>
 
                     <TooltipContent>
@@ -176,9 +186,9 @@ export function LoginForm() {
         >
           {isSubmitting ?
             <Loader2 className="mr-2 size-4 animate-spin" />
-          : isEmailMode ?
-            <Mail className="mr-2 size-4" />
-          : <Fingerprint className="mr-2 size-4" />}
+            : isEmailMode ?
+              <Mail className="mr-2 size-4" />
+              : <Fingerprint className="mr-2 size-4" />}
 
           {isEmailMode ? "Login with Email" : "Login"}
         </Button>

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -42,6 +42,7 @@ export function SignUpForm() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const searchParams = useSearchParams();
+  const router = useRouter();
   const authError = searchParams.get("error");
 
   if (authError === "OAuthAccountNotLinked") {
@@ -58,16 +59,35 @@ export function SignUpForm() {
   async function onSubmit(formData: FormData) {
     setIsSubmitting(true);
 
+    const loadingToast = toast.loading("Creating Account...");
+
     try {
-      toast.promise(createNewAccount({ ...formData }), {
-        loading: "Creating Account...",
-        success: "Account Created Successfully",
-        error: (error) => error.message,
-        finally: () => setIsSubmitting(false),
-      });
-    } catch (error) {
+      await createNewAccount({ ...formData });
+
+      // If we reach here, account was created but redirect didn't happen
+      // Dismiss loading and show success
+      toast.success("Account Created Successfully", { id: loadingToast });
+      router.push("/dashboard");
+      setIsSubmitting(false);
+    } catch (error: unknown) {
+      // Check if it's a redirect (NEXT_REDIRECT)
+      // Next.js redirect() throws a special error that we should not catch
+      if (error && typeof error === "object") {
+        const errObj = error as Record<string, unknown>;
+        if (
+          errObj.digest === "NEXT_REDIRECT" ||
+          (typeof errObj.message === "string" && errObj.message.includes("NEXT_REDIRECT"))
+        ) {
+          // This is a redirect, dismiss loading toast and let it propagate
+          toast.dismiss(loadingToast);
+          throw error;
+        }
+      }
+
+      // Real error occurred
       const err = error as Error;
-      console.error(err.message);
+      toast.error(err.message || "Failed to create account", { id: loadingToast });
+      setIsSubmitting(false);
     }
   }
 
@@ -124,7 +144,7 @@ export function SignUpForm() {
                     >
                       {isPassVisible ?
                         <EyeOff className="size-5" />
-                      : <Eye className="size-5" />}
+                        : <Eye className="size-5" />}
                     </TooltipTrigger>
 
                     <TooltipContent>
@@ -170,14 +190,14 @@ export function SignUpForm() {
                     >
                       {isConfirmPassVisible ?
                         <EyeOff className="size-5" />
-                      : <Eye className="size-5" />}
+                        : <Eye className="size-5" />}
                     </TooltipTrigger>
 
                     <TooltipContent>
                       <p className="text-xs">
                         {isConfirmPassVisible ?
                           "Hide Password"
-                        : "Show Password"}
+                          : "Show Password"}
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -196,7 +216,7 @@ export function SignUpForm() {
         >
           {isSubmitting ?
             <Loader2 className="mr-2 size-4 animate-spin" />
-          : <Mail className="mr-2 size-4" />}
+            : <Mail className="mr-2 size-4" />}
           Sign Up
         </Button>
       </form>
