@@ -4,7 +4,7 @@ import { siteConfig } from "@/config/site";
 import { GitHub, Logo, X } from "../icons";
 import { Separator } from "../ui/separator";
 import { NewsletterSubscriptionForm } from "./newsletter-subscription-form";
-import { ThemeToggleGroup } from "./theme-toggle-group";
+// import { ThemeToggleGroup } from "./theme-toggle-group";
 
 const footerLinks = [
   {
@@ -109,8 +109,6 @@ export function SiteFooter() {
               </a>
             </span>
           </p>
-
-          <ThemeToggleGroup />
         </div>
       </div>
     </footer>
