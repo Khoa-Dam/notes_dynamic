@@ -11,6 +11,8 @@ export {
   getCollaboratingWorkspaces,
   getPrivateWorkspaces,
   getSharedWorkspaces,
+  getWorkspaceById,
+  updateWorkspace,
 } from "./workspace";
 export {
   createFolder,

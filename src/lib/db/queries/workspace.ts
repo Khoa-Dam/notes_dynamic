@@ -1,7 +1,8 @@
 "use server";
 
-import { unstable_cache as cache, revalidateTag } from "next/cache";
+import { unstable_cache as cache, revalidateTag, revalidatePath } from "next/cache";
 import { and, eq, notExists } from "drizzle-orm";
+import { validate } from "uuid";
 
 import type { Workspace } from "@/types/db";
 
@@ -107,3 +108,59 @@ export const getSharedWorkspaces = cache(
   ["get_shared_workspaces"],
   { tags: ["get_shared_workspaces"] }
 );
+
+/**
+ * Get workspace by ID
+ * @param workspaceId - Workspace ID
+ * @returns Workspace object
+ */
+export const getWorkspaceById = cache(
+  async (workspaceId: string) => {
+    const isValid = validate(workspaceId);
+
+    if (!isValid) {
+      throw new Error("Invalid workspace ID");
+    }
+
+    try {
+      const [workspace] = await db
+        .select()
+        .from(workspaces)
+        .where(eq(workspaces.id, workspaceId))
+        .limit(1);
+
+      return workspace;
+    } catch (e) {
+      console.error((e as Error).message);
+      throw new Error("Failed to fetch workspace from the database");
+    }
+  },
+  ["get_workspace_by_id"],
+  { tags: ["get_workspace_by_id"] }
+);
+
+/**
+ * Update workspace
+ * @param workspace - Workspace object
+ * @returns Updated workspace
+ */
+export async function updateWorkspace(workspace: Workspace) {
+  try {
+    const [updatedWorkspace] = await db
+      .update(workspaces)
+      .set(workspace)
+      .where(eq(workspaces.id, workspace.id!))
+      .returning();
+
+    return updatedWorkspace;
+  } catch (e) {
+    console.error((e as Error).message);
+    throw new Error("Failed to update workspace");
+  } finally {
+    revalidateTag("get_workspace_by_id", {});
+    revalidateTag("get_private_workspaces", {});
+    revalidateTag("get_collaborating_workspaces", {});
+    revalidateTag("get_shared_workspaces", {});
+    revalidatePath("/dashboard", "layout");
+  }
+}
