@@ -45,11 +45,17 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const authError = searchParams.get("error");
 
-  if (authError === "OAuthAccountNotLinked") {
-    toast.error("OAuth Account Not Linked", {
-      description: "This account is already linked with another provider.",
-    });
-  }
+  React.useEffect(() => {
+    if (authError === "OAuthAccountNotLinked") {
+      toast.error("Account Already Exists", {
+        description: "An account with this email already exists. Please sign in with your original method or use a different email.",
+      });
+    } else if (authError === "AccessDenied") {
+      toast.error("Access Denied", {
+        description: "This account is already linked with another OAuth provider. Please sign in with your original method.",
+      });
+    }
+  }, [authError]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(loginSchema),
@@ -62,23 +68,22 @@ export function LoginForm() {
     try {
       const result = await signIn("credentials", {
         ...formData,
-        redirect: true,
+        redirect: false,
         callbackUrl: "/dashboard",
       });
 
-      // If signIn returns an error (not redirect)
+      // If signIn returns an error
       if (result?.error) {
         toast.error("Invalid credentials. Please try again.");
         setIsSubmitting(false);
+      } else if (result?.ok) {
+        // Redirect manually on success
+        window.location.href = "/dashboard";
       }
-      // If successful, NextAuth will handle redirect automatically
     } catch (error) {
       const err = error as Error;
-      // Check if it's a redirect error (should not show error for redirect)
-      if (!err.message.includes("NEXT_REDIRECT")) {
-        toast.error("Something went wrong. Please try again.");
-        setIsSubmitting(false);
-      }
+      toast.error("Something went wrong. Please try again.");
+      setIsSubmitting(false);
     }
   }
 
