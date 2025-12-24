@@ -1,11 +1,19 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { Logo } from "@/components/icons";
+import { getCurrentUser } from "@/lib/auth";
 import { AuthModeToggle } from "./components/auth-mode-toggle";
 
-export default function AuthLayout({ children }: React.PropsWithChildren) {
+export default async function AuthLayout({ children }: React.PropsWithChildren) {
+  // Redirect to dashboard if user is already logged in
+  const user = await getCurrentUser();
+  if (user) {
+    redirect("/dashboard");
+  }
+
   return (
     <div className="container h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
       <div className="relative hidden h-full flex-col justify-between border-r p-10 lg:flex">

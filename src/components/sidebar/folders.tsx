@@ -472,8 +472,8 @@ export function Folders() {
 
 
                               <AlertDialog>
-                                <AlertDialogTrigger>
-                                  <Tooltip delayDuration={0}>
+                                <Tooltip delayDuration={0}>
+                                  <AlertDialogTrigger asChild>
                                     <TooltipTrigger asChild>
                                       <Button
                                         variant="ghost"
@@ -482,9 +482,9 @@ export function Folders() {
                                         <Trash className="size-4" />
                                       </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>Delete file</TooltipContent>
-                                  </Tooltip>
-                                </AlertDialogTrigger>
+                                  </AlertDialogTrigger>
+                                  <TooltipContent>Delete file</TooltipContent>
+                                </Tooltip>
 
                                 <AlertDialogContent>
                                   <AlertDialogHeader>

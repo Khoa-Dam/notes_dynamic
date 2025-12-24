@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { LayoutGrid, Plus } from "lucide-react";
 import { toast } from "sonner";
 
+import type { Workspace } from "@/types/db";
 import { useAppState } from "@/hooks/use-app-state";
 import {
   getPrivateWorkspaces,
@@ -30,9 +31,9 @@ export function Workspaces() {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAppState();
-  const [privateWorkspaces, setPrivateWorkspaces] = React.useState<any[]>([]);
-  const [sharedWorkspaces, setSharedWorkspaces] = React.useState<any[]>([]);
-  const [collaboratingWorkspaces, setCollaboratingWorkspaces] = React.useState<any[]>([]);
+  const [privateWorkspaces, setPrivateWorkspaces] = React.useState<Workspace[]>([]);
+  const [sharedWorkspaces, setSharedWorkspaces] = React.useState<Workspace[]>([]);
+  const [collaboratingWorkspaces, setCollaboratingWorkspaces] = React.useState<Workspace[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
 

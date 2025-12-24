@@ -30,6 +30,7 @@ export function ResizableLayout(props: ResizableLayoutProps) {
   return (
     <ResizablePanelGroup
       direction="horizontal"
+      className="h-screen overflow-hidden"
       onLayout={(sizes) => {
         setCookie("react-resizable-panels:layout", JSON.stringify(sizes));
       }}
@@ -49,7 +50,7 @@ export function ResizableLayout(props: ResizableLayoutProps) {
           setCookie("react-resizable-panels:collapsed", true);
         }}
         className={cn(
-          "hidden lg:block",
+          "hidden lg:block h-full overflow-hidden",
           isCollapsed &&
           "min-w-14 overflow-visible! transition-all duration-300 ease-in-out"
         )}

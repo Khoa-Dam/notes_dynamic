@@ -36,10 +36,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 
   callbacks: {
-    signIn: async ({ user, account, profile }) => {
-      // Chỉ cho phép link OAuth account với existing user nếu user đã đăng ký bằng credentials (có password)
-      // Không tự động link 2 OAuth accounts khác nhau với nhau
-      if (account?.provider !== "credentials" && user.email && account) {
+    signIn: async ({ user, account }) => {
+      // Cho phép credentials login
+      if (account?.provider === "credentials") {
+        return true;
+      }
+
+      // OAuth login
+      if (account && user.email) {
         // Kiểm tra xem account OAuth này đã được link với user nào chưa
         const existingAccount = await db.query.dbAccounts.findFirst({
           where: (a, { eq, and }) =>
@@ -49,9 +53,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             ),
         });
 
-        // Nếu account đã được link với user khác, không cho phép
+        // Nếu OAuth account đã tồn tại, cho phép đăng nhập
         if (existingAccount) {
-          // Account đã được link, cho phép đăng nhập
           return true;
         }
 
@@ -61,19 +64,39 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         if (existingUser) {
-          // Chỉ cho phép link nếu user đã đăng ký bằng credentials (có password)
-          // Nếu user đã đăng ký bằng OAuth khác, không cho phép link
-          if (existingUser.password) {
-            // User đã đăng ký bằng email/password, cho phép link OAuth account
-            return true;
-          } else {
-            // User đã đăng ký bằng OAuth khác, không cho phép link account OAuth mới
-            // Trả về false để NextAuth throw AccessDenied error
-            return false;
+          // User đã tồn tại với email này
+          // Auto-link OAuth account mới với user hiện tại
+          await db.insert(dbAccounts).values({
+            userId: existingUser.id,
+            type: account.type as "oauth" | "oidc" | "email" | "webauthn",
+            provider: account.provider,
+            providerAccountId: account.providerAccountId,
+            refresh_token: account.refresh_token ?? null,
+            access_token: account.access_token ?? null,
+            expires_at: account.expires_at ?? null,
+            token_type: account.token_type ?? null,
+            scope: account.scope ?? null,
+            id_token: account.id_token ?? null,
+            session_state: account.session_state as string ?? null,
+          });
+
+          // Update user info nếu chưa có
+          if (!existingUser.name || !existingUser.image) {
+            await db
+              .update(users)
+              .set({
+                name: existingUser.name || user.name,
+                image: existingUser.image || user.image,
+                emailVerified: existingUser.emailVerified || new Date(),
+              })
+              .where(eq(users.id, existingUser.id));
           }
+
+          return true;
         }
       }
 
+      // Cho phép tạo user mới với OAuth
       return true;
     },
 

@@ -4,12 +4,39 @@ import { randomUUID } from "crypto";
 import { redirect } from "next/navigation";
 import { compare, hash } from "bcryptjs";
 import { eq } from "drizzle-orm";
+import { AuthError } from "next-auth";
 
-import type { resetPasswordSchema, signUpSchema } from "./validations";
+import type { loginSchema, resetPasswordSchema, signUpSchema } from "./validations";
 import type { z } from "zod";
 
 import { db } from "./db";
 import { users } from "./db/schema";
+import { signIn } from "./auth";
+
+export async function loginWithCredentials(
+  credentials: z.infer<typeof loginSchema>
+): Promise<{ error?: string }> {
+  try {
+    await signIn("credentials", {
+      ...credentials,
+      redirect: false,
+    });
+    
+    return {};
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin":
+          return { error: "Invalid credentials. Please try again." };
+        default:
+          return { error: "Something went wrong. Please try again." };
+      }
+    }
+    
+    // Re-throw if it's a redirect (NEXT_REDIRECT)
+    throw error;
+  }
+}
 
 export async function createNewAccount(
   credentials: z.infer<typeof signUpSchema>
@@ -67,3 +94,4 @@ export async function resetPassword(
 
   redirect("/login");
 }
+

@@ -1,7 +1,7 @@
 import React from "react";
 import {
   FileIcon,
-  Folder,
+  Folder as FolderIcon,
   Ghost,
   Trash2,
   TrashIcon,
@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import type { File } from "@/types/db";
+import type { File, Folder } from "@/types/db";
 
 import { useAppState } from "@/hooks/use-app-state";
 import {
@@ -64,7 +64,7 @@ export function Trash() {
       return;
     }
 
-    const updatedFolder: File = { ...folder, inTrash: false };
+    const updatedFolder: Folder = { ...folder, inTrash: false };
     updateFolder(updatedFolder);
 
     toast.promise(updateFolderInDb(updatedFolder), {
@@ -125,7 +125,7 @@ export function Trash() {
                 >
                   <div className="group relative rounded-md border shadow">
                     <div className="mx-auto flex h-36 items-center justify-center text-5xl drop-shadow-md">
-                      {folder.iconId ? folder.iconId : <Folder size={56} />}
+                      {folder.iconId ? folder.iconId : <FolderIcon size={56} />}
                     </div>
 
                     <div className="absolute inset-0 hidden items-center justify-center space-x-2 backdrop-blur-sm group-hover:flex">

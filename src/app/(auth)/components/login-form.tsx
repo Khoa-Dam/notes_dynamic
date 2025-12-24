@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AtSign, Eye, EyeOff, Fingerprint, Loader2, Mail } from "lucide-react";
-import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -27,6 +26,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { loginSchema } from "@/lib/validations";
+import { loginWithCredentials } from "@/lib/actions";
 import { OAuthButtons } from "./oauth-buttons";
 
 type FormData = z.infer<typeof loginSchema>;
@@ -62,26 +62,47 @@ export function LoginForm() {
     defaultValues,
   });
 
+  // Update type field when toggling mode
+  const handleModeToggle = () => {
+    const newMode = !isEmailMode;
+    setIsEmailMode(newMode);
+    form.setValue("type", newMode ? "email" : "username");
+    // Clear the opposite field
+    if (newMode) {
+      form.setValue("username", undefined as unknown as string);
+    } else {
+      form.setValue("email", undefined as unknown as string);
+    }
+  };
+
   async function onSubmit(formData: FormData) {
     setIsSubmitting(true);
 
     try {
-      const result = await signIn("credentials", {
-        ...formData,
-        redirect: false,
-        callbackUrl: "/dashboard",
-      });
+      const result = await loginWithCredentials(formData);
 
-      // If signIn returns an error
       if (result?.error) {
-        toast.error("Invalid credentials. Please try again.");
+        toast.error(result.error);
         setIsSubmitting(false);
-      } else if (result?.ok) {
+      } else {
         // Redirect manually on success
         window.location.href = "/dashboard";
       }
     } catch (error) {
-      const err = error as Error;
+      // Check if it's a redirect (NEXT_REDIRECT)
+      if (error && typeof error === "object") {
+        const errObj = error as Record<string, unknown>;
+        if (
+          errObj.digest === "NEXT_REDIRECT" ||
+          (typeof errObj.message === "string" && errObj.message.includes("NEXT_REDIRECT"))
+        ) {
+          // Redirect successful
+          window.location.href = "/dashboard";
+          return;
+        }
+      }
+      
+      console.error("Login error:", error);
       toast.error("Something went wrong. Please try again.");
       setIsSubmitting(false);
     }
@@ -116,7 +137,7 @@ export function LoginForm() {
                       }
                       tabIndex={-1}
                       type="button"
-                      onClick={() => setIsEmailMode(!isEmailMode)}
+                      onClick={handleModeToggle}
                       className="absolute inset-y-0 right-2 my-auto text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
                     >
                       {isEmailMode ?

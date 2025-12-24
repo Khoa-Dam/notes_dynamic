@@ -50,7 +50,7 @@ export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
 
   return (
     <aside
-      className={cn("relative z-40 hidden lg:block", className)}
+      className={cn("relative z-40 hidden lg:block h-full overflow-hidden", className)}
       {...props}
     >
       <div

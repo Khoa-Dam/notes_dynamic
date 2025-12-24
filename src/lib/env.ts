@@ -36,6 +36,8 @@ export const env = createEnv({
       // VERCEL_URL doesn't include `https` so it cant be validated as a URL
       process.env.VERCEL ? z.string() : z.string().url()
     ),
+    // AUTH_URL for NextAuth v5 beta
+    AUTH_URL: z.string().url().optional(),
 
     /* -----------------------------------------------------------------------------------------------
      * Google OAuth
@@ -89,6 +91,14 @@ export const env = createEnv({
     UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
     ENABLE_RATE_LIMITING: z.enum(["true", "false"]).default("false"),
     RATE_LIMITING_REQUESTS_PER_SECOND: z.coerce.number().default(50),
+
+    /* -----------------------------------------------------------------------------------------------
+     * Cloudinary
+     * -----------------------------------------------------------------------------------------------*/
+
+    CLOUDINARY_CLOUD_NAME: z.string().min(1, { message: "Cloudinary Cloud Name is required" }),
+    CLOUDINARY_API_KEY: z.string().min(1, { message: "Cloudinary API Key is required" }),
+    CLOUDINARY_API_SECRET: z.string().min(1, { message: "Cloudinary API Secret is required" }),
   },
 
   /**
@@ -97,7 +107,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    // NEXT_PUBLIC_CLIENTVAR: z.string(),
+    NEXT_PUBLIC_APP_URL: z.string().url(),
   },
 
   /**
@@ -106,7 +116,7 @@ export const env = createEnv({
    * For Next.js >= 13.4.4, you only need to destructure client variables (Only valid for `experimental__runtimeEnv`)
    */
   experimental__runtimeEnv: {
-    // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },
 
   /**

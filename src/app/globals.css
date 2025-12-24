@@ -78,6 +78,9 @@
   --sidebar-ring: oklch(0.707 0.022 261.325);
 }
 
+
+
+
 .dark {
   --background: oklch(0.2134 0 0);
   --foreground: oklch(0.985 0.002 247.839);
@@ -116,7 +119,10 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    @apply h-screen overflow-hidden;
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground h-screen overflow-hidden;
   }
 }

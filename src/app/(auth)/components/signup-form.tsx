@@ -45,11 +45,13 @@ export function SignUpForm() {
   const router = useRouter();
   const authError = searchParams.get("error");
 
-  if (authError === "OAuthAccountNotLinked") {
-    toast.error("OAuth Account Not Linked", {
-      description: "This account is already linked with another provider.",
-    });
-  }
+  React.useEffect(() => {
+    if (authError === "OAuthAccountNotLinked") {
+      toast.error("OAuth Account Not Linked", {
+        description: "This account is already linked with another provider.",
+      });
+    }
+  }, [authError]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(signUpSchema),

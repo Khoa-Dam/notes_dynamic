@@ -19,7 +19,7 @@ export const Providers: React.FCC<{
       disableTransitionOnChange
       {...theme}
     >
-      <SessionProvider>
+      <SessionProvider basePath="/api/auth">
         <TooltipProvider>{children}</TooltipProvider>
       </SessionProvider>
     </ThemeProvider>
