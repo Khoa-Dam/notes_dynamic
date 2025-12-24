@@ -156,6 +156,10 @@ Or use Drizzle Studio to manage your database:
 pnpm db:studio
 ```
 
+### Schema Visulizer
+<img width="920" height="682" alt="image" src="https://github.com/user-attachments/assets/049775e0-8956-4866-83c3-ed39c4b76aea" />
+
+
 ## 🔑 OAuth Configuration
 
 ### Google OAuth
