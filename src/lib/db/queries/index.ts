@@ -32,5 +32,6 @@ export {
   getFiles,
   getFilesFromDb,
   updateFile,
+  updateFileBanner,
   updateFileInDb,
 } from "./file";

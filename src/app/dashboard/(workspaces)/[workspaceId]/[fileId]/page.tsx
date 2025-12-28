@@ -13,8 +13,13 @@ import { ChevronLeft, MoreVertical, Trash2 } from 'lucide-react'
 
 import type { File } from '@/types/db'
 
-import { deleteFile, getFileById, updateFile } from '@/lib/db/queries'
-import { useAppState } from '@/hooks/use-app-state'
+import {
+  deleteFile,
+  getFileById,
+  updateFile,
+  updateFileBanner
+} from '@/lib/db/queries'
+import { store, useAppState } from '@/hooks/use-app-state'
 import { useDebounceEffect } from '@/hooks/use-debounce-effect'
 import { FileEditor } from '@/components/editor/file-editor'
 import { Cover } from '@/components/cover'
@@ -22,6 +27,7 @@ import { Toolbar } from '@/components/toolbar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SidebarMobile } from '@/components/sidebar/sidebar-mobile'
 import { Button } from '@/components/ui/button'
+import { Publish } from '@/components/publish'
 
 interface PageProps {
   params: Promise<{
@@ -35,12 +41,19 @@ export default function FilePage({ params }: PageProps) {
   const [file, setFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-  const { deleteFile: removeFileFromState } = useAppState()
+  const { files, deleteFile: removeFileFromState } = useAppState()
+  const fileFromState = files.find((f) => f.id === fileId)
 
   const [title, setTitle] = useState('Untitled')
   const [content, setContent] = useState('')
   const [iconId, setIconId] = useState('💗')
   const [bannerUrl, setBannerUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (fileFromState) {
+      setBannerUrl(fileFromState.bannerUrl ?? null)
+    }
+  }, [fileFromState, fileFromState?.bannerUrl])
 
   useEffect(() => {
     getFileById(fileId)
@@ -89,9 +102,15 @@ export default function FilePage({ params }: PageProps) {
     setIconId(newIconId)
   }, [])
 
-  const onBannerUrlChange = useCallback((newBannerUrl: string | null) => {
-    setBannerUrl(newBannerUrl)
-  }, [])
+  const onBannerUrlChange = useCallback(
+    (newBannerUrl: string | null) => {
+      setBannerUrl(newBannerUrl)
+      updateFileBanner(fileId, newBannerUrl).then(() => {
+        store.updateFileBanner(fileId, newBannerUrl)
+      })
+    },
+    [fileId]
+  )
 
   const handleDelete = async () => {
     try {
@@ -113,7 +132,7 @@ export default function FilePage({ params }: PageProps) {
   if (isLoading) {
     return (
       <div>
-        <Cover.Skeleton />
+        <Cover />
         <div className='md:max-w-3xl lg:max-w-4xl mx-auto mt-10'>
           <div className='space-y-4 pl-8 pt-4'>
             <Skeleton className='h-14 w-[50%]' />
@@ -144,6 +163,7 @@ export default function FilePage({ params }: PageProps) {
         </div>
 
         <div className='flex items-center gap-2'>
+          <Publish initialData={file!} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant='ghost' size='sm'>
@@ -168,7 +188,7 @@ export default function FilePage({ params }: PageProps) {
         fileId={fileId}
         onBannerUrlChange={onBannerUrlChange}
       />
-      <div className='md:max-w-3xl lg:max-w-4xl mx-auto'>
+      <div className='md:max-w-5xl lg:max-w-7xl mx-auto'>
         <Toolbar
           initialData={{ ...file, title, iconId }}
           onTitleChange={onTitleChange}

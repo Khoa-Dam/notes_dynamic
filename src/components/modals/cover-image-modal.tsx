@@ -4,6 +4,8 @@ import { useState } from 'react'
 // import { useMutation } from "convex/react";
 import { useParams } from 'next/navigation'
 
+import { updateFileBanner } from '@/lib/db/queries/file'
+import { store } from '@/hooks/use-app-state'
 import {
   Dialog,
   DialogContent,
@@ -42,6 +44,8 @@ export const CoverImageModal = () => {
     })
 
     if (!response.ok) {
+      setFile(undefined)
+      setIsSubmitting(false)
       throw new Error('Upload failed')
     }
 
@@ -53,21 +57,13 @@ export const CoverImageModal = () => {
     if (file) {
       setIsSubmitting(true)
       setFile(file)
-      // console.log('file', file)
-      const bannerUrlNew = await uploadFile(file)
-      console.log('bannerUrlNew', bannerUrlNew)
-      coverImage.onReplace(bannerUrlNew)
-      // const res = await edgestore.publicFiles.upload({
-      //   file,
-      //   options: {
-      //     replaceTargetUrl: coverImage.url
-      //   }
-      // });
 
-      // await update({
-      //   id: params.documentId as Id<"documents">,
-      //   coverImage: res.url
-      // });
+      const bannerUrlNew = await uploadFile(file)
+
+      if (coverImage.fileId) {
+        await updateFileBanner(coverImage.fileId, bannerUrlNew)
+        store.updateFileBanner(coverImage.fileId, bannerUrlNew)
+      }
 
       onClose()
     }

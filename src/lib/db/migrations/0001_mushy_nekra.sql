@@ -1,0 +1,1 @@
+ALTER TABLE "dnotes_files" ADD COLUMN "is_published" boolean DEFAULT false NOT NULL;

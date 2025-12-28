@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -83,6 +83,8 @@ export function Folders() {
   const [openedFolders, setOpenedFolders] = useState<string[]>([])
   const [folderName, setFolderName] = useState('Untitled')
   const [selectedEmoji, setSelectedEmoji] = useState('')
+  const [editingFolderId, setEditingFolderId] = useState<string | null>(null)
+  const formRef = useRef<HTMLFormElement>(null)
 
   // Helper function to create initial content with icon and header
   function createInitialContent(icon: string = '📄'): string {
@@ -98,7 +100,7 @@ export function Folders() {
         content: [
           {
             type: 'text',
-            text: icon,
+            text: '',
             styles: {}
           }
         ],
@@ -116,7 +118,7 @@ export function Folders() {
         content: [
           {
             type: 'text',
-            text: 'New page',
+            text: '',
             styles: {}
           }
         ],
@@ -135,7 +137,7 @@ export function Folders() {
     const initialContent = createInitialContent()
     const newFile: File = {
       id: tempId,
-      title: 'New page',
+      title: 'Untitled',
       iconId: '📄',
       folderId,
       workspaceId: pathname.split('/')[2],
@@ -204,6 +206,65 @@ export function Folders() {
     setSelectedEmoji('')
     setFolderName('Untitled')
     setIsCreatingFolder(false)
+  }
+
+  function handleCancel() {
+    setEditingFolderId(null)
+    setFolderName('Untitled')
+    setSelectedEmoji('')
+  }
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (
+        formRef.current &&
+        !formRef.current.contains(target) &&
+        !target.closest('[role="dialog"]')
+      ) {
+        handleCancel()
+      }
+    }
+
+    if (editingFolderId) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [editingFolderId])
+
+  async function handleChangeFolder(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+
+    if (folderName.length < 3) {
+      toast.warning('Folder name must be at least 3 characters long.')
+      return
+    }
+
+    if (!editingFolderId) return
+
+    const folder = folders.find((f) => f.id === editingFolderId)
+    if (!folder) return
+
+    const updatedFolder: Folder = {
+      ...folder,
+      title: folderName,
+      iconId: selectedEmoji
+    }
+
+    updateFolder(updatedFolder)
+    setEditingFolderId(null)
+
+    try {
+      await updateFolderInDb(updatedFolder)
+      toast.success('Folder updated.')
+      router.refresh()
+    } catch (error) {
+      updateFolder(folder)
+      toast.error('Something went wrong! Unable to update folder.')
+    }
   }
 
   async function moveFileToTrash(fileId: string) {
@@ -296,7 +357,7 @@ export function Folders() {
               className='size-7 text-muted-foreground'
             >
               {isCreatingFolder ? (
-                <X className='size-4 duration-300 animate-in spin-in-90' />
+                <X className='size-6 duration-300 animate-in spin-in-90' />
               ) : (
                 <Plus className='size-[18px] duration-300 animate-out spin-out-90' />
               )}
@@ -328,7 +389,7 @@ export function Folders() {
                     className='absolute inset-y-0 left-1 my-auto inline-flex size-7 items-center justify-center rounded-md hover:bg-muted'
                   >
                     {!selectedEmoji ? (
-                      <FolderIcon className='size-4' />
+                      <FolderIcon className='size-6' />
                     ) : (
                       selectedEmoji
                     )}
@@ -349,7 +410,7 @@ export function Folders() {
                     variant='ghost'
                     className='absolute inset-y-0 right-1 my-auto size-7 text-muted-foreground'
                   >
-                    <Check className='size-4' />
+                    <Check className='size-6' />
                   </Button>
                 </form>
               )}
@@ -366,27 +427,87 @@ export function Folders() {
                     <ContextMenu>
                       <ContextMenuTrigger>
                         <AccordionTrigger
+                          onDoubleClick={() => {
+                            setEditingFolderId(id!)
+                            setFolderName(title)
+                            setSelectedEmoji(iconId)
+                          }}
                           className={cn(
                             buttonVariants({ size: 'sm', variant: 'ghost' }),
                             'group/trigger justify-start border-none hover:no-underline data-[state=open]:bg-secondary',
                             '[&>svg]:hidden'
                           )}
                         >
-                          <span className='mr-2'>
-                            {iconId ? (
-                              iconId
-                            ) : openedFolders.includes(id!) ? (
-                              <FolderOpen className='size-4 shrink-0' />
-                            ) : (
-                              <FolderIcon className='size-4 shrink-0' />
-                            )}
-                          </span>
+                          {editingFolderId === id ? (
+                            <form
+                              ref={formRef}
+                              onSubmit={handleChangeFolder}
+                              onClick={(e) => e.stopPropagation()}
+                              className='relative mb-1 w-full'
+                            >
+                              <EmojiPicker
+                                title='Select an emoji'
+                                side='right'
+                                align='start'
+                                getValue={setSelectedEmoji}
+                                className='absolute inset-y-0 left-1 my-auto inline-flex size-7 items-center justify-center rounded-md hover:bg-muted'
+                              >
+                                {!selectedEmoji ? (
+                                  <FolderIcon className='size-6' />
+                                ) : (
+                                  selectedEmoji
+                                )}
+                              </EmojiPicker>
 
-                          {title}
+                              <Input
+                                autoFocus
+                                value={folderName}
+                                onChange={(e) => setFolderName(e.target.value)}
+                                className={cn(
+                                  'h-9 pl-9 pr-20',
+                                  folderName.length < 3 && 'ring-destructive!'
+                                )}
+                              />
 
-                          <div className='ml-auto'>
-                            <ChevronDown className=' size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover/trigger:visible group-data-[state=open]/trigger:visible group-data-[state=open]/trigger:rotate-180' />
-                          </div>
+                              <div className='absolute inset-y-0 right-1 my-auto flex items-center gap-1'>
+                                <Button
+                                  size='icon'
+                                  type='submit'
+                                  variant='ghost'
+                                  className='size-7 text-muted-foreground'
+                                >
+                                  <Check className='size-6' />
+                                </Button>
+                                <Button
+                                  size='icon'
+                                  type='button'
+                                  variant='ghost'
+                                  onClick={handleCancel}
+                                  className='size-7 text-muted-foreground'
+                                >
+                                  <X className='size-6' />
+                                </Button>
+                              </div>
+                            </form>
+                          ) : (
+                            <>
+                              <span className='mr-2 text-xl'>
+                                {iconId ? (
+                                  iconId
+                                ) : openedFolders.includes(id!) ? (
+                                  <FolderOpen className='size-6 shrink-0' />
+                                ) : (
+                                  <FolderIcon className='size-6 shrink-0' />
+                                )}
+                              </span>
+
+                              {title}
+
+                              <div className='ml-auto'>
+                                <ChevronDown className=' size-6 shrink-0 text-muted-foreground transition-transform duration-200 group-hover/trigger:visible group-data-[state=open]/trigger:visible group-data-[state=open]/trigger:rotate-180' />
+                              </div>
+                            </>
+                          )}
                         </AccordionTrigger>
                       </ContextMenuTrigger>
 
@@ -395,7 +516,7 @@ export function Folders() {
                           onClick={() => createFileToggle(id!)}
                           className='cursor-pointer'
                         >
-                          <FileIcon className='mr-2 size-4 shrink-0' />
+                          <FileIcon className='mr-2 size-6 shrink-0' />
                           New File
                           <Kbd className='ml-auto'>
                             {isAppleDevice() ? '⌘' : 'Ctrl'}+N
@@ -413,7 +534,7 @@ export function Folders() {
                           onClick={() => moveFolderToTrash(id!)}
                           className='cursor-pointer text-red-500!'
                         >
-                          <Trash2 className='mr-2 size-4 shrink-0' />
+                          <Trash2 className='mr-2 size-6 shrink-0' />
                           Move to Trash
                           <Kbd className='ml-auto'>
                             {isAppleDevice() ? '⌘' : 'Ctrl'}+D
@@ -435,7 +556,7 @@ export function Folders() {
                           onClick={() => deleteFolderHandler(id!)}
                           className='cursor-pointer text-red-500!'
                         >
-                          <Trash className='mr-2 size-4 shrink-0' />
+                          <Trash className='mr-2 size-6 shrink-0' />
                           Delete
                           <Kbd className='ml-auto'>
                             {isAppleDevice() ? '⌘' : 'Ctrl'}+Shift+D
@@ -459,11 +580,11 @@ export function Folders() {
                                 href={`/dashboard/${workspaceId}/${id}`}
                                 className='flex w-full items-center gap-0.5'
                               >
-                                <span className='mr-2 shrink-0'>
+                                <span className='mr-2 ml-5 text-xl shrink-0'>
                                   {iconId ? (
                                     iconId
                                   ) : (
-                                    <FileIcon className='size-4' />
+                                    <FileIcon className='size-6' />
                                   )}
                                 </span>
                                 {title}
@@ -477,7 +598,7 @@ export function Folders() {
                                         variant='ghost'
                                         className='size-7 p-0 text-muted-foreground hover:text-red-500'
                                       >
-                                        <Trash className='size-4' />
+                                        <Trash className='size-6' />
                                       </Button>
                                     </TooltipTrigger>
                                   </AlertDialogTrigger>

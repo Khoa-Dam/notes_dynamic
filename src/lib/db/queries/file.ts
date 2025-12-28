@@ -70,9 +70,12 @@ export const getFilesFromDb = getFiles
  */
 export async function updateFile(file: File) {
   try {
+    // We should not update id or createdAt
+    const { id, createdAt, ...updatableFields } = file
+
     const [updatedFile] = await db
       .update(files)
-      .set(file)
+      .set(updatableFields)
       .where(eq(files.id, file.id!))
       .returning()
 
@@ -143,3 +146,59 @@ export const getFileById = cache(
   ['get_file_by_id'],
   { tags: ['get_file_by_id'] }
 )
+
+/**
+ * Update file banner URL
+ * @param fileId - File ID
+ * @param bannerUrl - Banner URL
+ * @returns Updated file
+ */
+export async function updateFileBanner(
+  fileId: string,
+  bannerUrl: string | null
+) {
+  try {
+    const [updatedFile] = await db
+      .update(files)
+      .set({ bannerUrl })
+      .where(eq(files.id, fileId))
+      .returning()
+
+    return updatedFile
+  } catch (e) {
+    console.error((e as Error).message)
+    throw new Error('Failed to update file banner')
+  } finally {
+    revalidateTag('get_files', {})
+    revalidateTag('get_file_by_id', {})
+    revalidatePath('/dashboard', 'layout')
+  }
+}
+
+/**
+ * Update file publish status
+ * @param fileId - File ID
+ * @param isPublished - Publish status
+ * @returns Updated file
+ */
+export async function updateFilePublishStatus(
+  fileId: string,
+  isPublished: boolean
+) {
+  try {
+    const [updatedFile] = await db
+      .update(files)
+      .set({ isPublished })
+      .where(eq(files.id, fileId))
+      .returning()
+
+    return updatedFile
+  } catch (e) {
+    console.error((e as Error).message)
+    throw new Error('Failed to update file publish status')
+  } finally {
+    revalidateTag('get_files', {})
+    revalidateTag('get_file_by_id', {})
+    revalidatePath('/dashboard', 'layout')
+  }
+}

@@ -13,6 +13,7 @@ export type AppState = {
 export type AppAction = {
   addFile: (file: File) => void;
   updateFile: (file: File) => void;
+  updateFileBanner: (fileId: string, bannerUrl: string | null) => void;
   deleteFile: (fileId: string) => void;
 
   addFolder: (folder: Folder) => void;
@@ -30,6 +31,11 @@ export const store = proxy<AppState & AppAction>({
   },
   updateFile(file) {
     store.files = store.files.map((f) => (f.id === file.id ? file : f));
+  },
+  updateFileBanner(fileId, bannerUrl) {
+    store.files = store.files.map((f) =>
+      f.id === fileId ? { ...f, bannerUrl } : f
+    );
   },
   deleteFile(id) {
     store.files = store.files.filter((f) => f.id !== id);

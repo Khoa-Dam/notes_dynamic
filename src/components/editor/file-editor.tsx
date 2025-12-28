@@ -16,6 +16,7 @@ import { BlockNoteEditor } from '@/components/editor/block-note-editor'
 // import { useAppState } from '@/hooks/use-app-state'
 
 interface FileEditorProps {
+  editable?: boolean
   workspaceId: string
   fileId: string
   content: string | null
@@ -23,18 +24,19 @@ interface FileEditorProps {
 }
 
 export function FileEditor({
+  editable = true,
   workspaceId,
   fileId,
   content,
   onContentChange
 }: FileEditorProps) {
   return (
-    <div className='flex h-full flex-col'>
+    <div className='flex h-full w-full flex-col'>
       <div className='flex-1 overflow-auto'>
         <BlockNoteEditor
           initialContent={content || ''}
           onChange={onContentChange}
-          editable={true}
+          editable={editable}
         />
       </div>
     </div>
