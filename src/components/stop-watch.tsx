@@ -11,24 +11,69 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Clock, Timer } from 'lucide-react'
+import confetti from 'canvas-confetti'
 
 export default function Stopwatch() {
   const [time, setTime] = useState(0)
   const [running, setRunning] = useState(false)
-  const [mode, setMode] = useState<'stopwatch' | 'countdown'>('stopwatch')
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [mode, setMode] = useState<'stopwatch' | 'countdown'>('countdown')
+  const [isCollapsed, setIsCollapsed] = useState(true)
   const [position, setPosition] = useState({ x: '', y: 90 })
   const [inputMinutes, setInputMinutes] = useState<string>('5')
+
+  const handleConfetti = () => {
+    const end = Date.now() + 3 * 1000 // 3 seconds
+    const colors = ['#a786ff', '#fd8bbc', '#eca184', '#f8deb1']
+    const frame = () => {
+      if (Date.now() > end) return
+      confetti({
+        particleCount: 2,
+        angle: 60,
+        spread: 55,
+        startVelocity: 60,
+        origin: { x: 0, y: 0.5 },
+        colors: colors
+      })
+      confetti({
+        particleCount: 2,
+        angle: 120,
+        spread: 55,
+        startVelocity: 60,
+        origin: { x: 1, y: 0.5 },
+        colors: colors
+      })
+      requestAnimationFrame(frame)
+    }
+    frame()
+  }
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Thêm useRef vào danh sách import
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  // Khởi tạo audio trong useEffect một lần duy nhất khi mount
+  useEffect(() => {
+    audioRef.current = new Audio('/sounds/alarm-sound.wav') // Thay bằng đường dẫn file của bạn
+  }, [])
+
+  const playAlarm = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0 // Phát lại từ đầu nếu đang phát dở
+      audioRef.current
+        .play()
+        .catch((err) => console.error('Lỗi phát âm thanh:', err))
+    }
+  }
   useEffect(() => {
     if (running) {
       timerRef.current = setInterval(() => {
         setTime((prev) => {
           if (mode === 'countdown') {
-            if (prev <= 10) {
+            if (prev <= 40) {
               clearInterval(timerRef.current!)
               setRunning(false)
+              handleConfetti()
+              playAlarm()
               // Handle countdown finish
               return 0
             }

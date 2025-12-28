@@ -422,7 +422,7 @@ export function Folders() {
                   <AccordionItem
                     key={id}
                     value={id!}
-                    className='my-px border-none'
+                    className='my-1 px-1 border-none'
                   >
                     <ContextMenu>
                       <ContextMenuTrigger>
@@ -433,7 +433,7 @@ export function Folders() {
                             setSelectedEmoji(iconId)
                           }}
                           className={cn(
-                            buttonVariants({ size: 'sm', variant: 'ghost' }),
+                            buttonVariants({ size: 'lg', variant: 'ghost' }),
                             'group/trigger justify-start border-none hover:no-underline data-[state=open]:bg-secondary',
                             '[&>svg]:hidden'
                           )}
@@ -491,7 +491,7 @@ export function Folders() {
                             </form>
                           ) : (
                             <>
-                              <span className='mr-2 text-xl'>
+                              <span className='mr-2 text-2xl'>
                                 {iconId ? (
                                   iconId
                                 ) : openedFolders.includes(id!) ? (
@@ -500,8 +500,7 @@ export function Folders() {
                                   <FolderIcon className='size-6 shrink-0' />
                                 )}
                               </span>
-
-                              {title}
+                              <span className='text-xl'>{title}</span>
 
                               <div className='ml-auto'>
                                 <ChevronDown className=' size-6 shrink-0 text-muted-foreground transition-transform duration-200 group-hover/trigger:visible group-data-[state=open]/trigger:visible group-data-[state=open]/trigger:rotate-180' />
@@ -573,14 +572,14 @@ export function Folders() {
                               key={id}
                               className={cn(
                                 'group w-full justify-between',
-                                buttonVariants({ size: 'sm', variant: 'ghost' })
+                                buttonVariants({ size: 'lg', variant: 'ghost' })
                               )}
                             >
                               <Link
                                 href={`/dashboard/${workspaceId}/${id}`}
-                                className='flex w-full items-center gap-0.5'
+                                className='flex text-xl flex w-full items-center gap-2'
                               >
-                                <span className='mr-2 ml-5 text-xl shrink-0'>
+                                <span className='mr-2 ml-5 size-6 flex items-center text-2xl shrink-0'>
                                   {iconId ? (
                                     iconId
                                   ) : (

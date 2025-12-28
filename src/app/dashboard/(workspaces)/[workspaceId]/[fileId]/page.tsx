@@ -8,7 +8,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from '@radix-ui/react-dropdown-menu'
+} from '@/components/ui/dropdown-menu'
 import { ChevronLeft, MoreVertical, Trash2 } from 'lucide-react'
 
 import type { File } from '@/types/db'
@@ -156,8 +156,13 @@ export default function FilePage({ params }: PageProps) {
           <div className='lg:hidden'>
             <SidebarMobile />
           </div>
-          <Button variant='ghost' size='sm' onClick={handleBack}>
-            <ChevronLeft className='h-4 w-4 mr-2' />
+          <Button
+            variant='ghost'
+            size='lg'
+            className='text-xl'
+            onClick={handleBack}
+          >
+            <ChevronLeft className='h-4 w-4 mr-2 text-xl' />
             Back
           </Button>
         </div>
@@ -166,16 +171,16 @@ export default function FilePage({ params }: PageProps) {
           <Publish initialData={file!} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant='ghost' size='sm'>
+              <Button variant='ghost' size='lg'>
                 <MoreVertical className='h-4 w-4' />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>
               <DropdownMenuItem
                 onClick={handleDelete}
-                className='text-destructive'
+                className='text-destructive cursor-pointer'
               >
-                <Trash2 className='h-4 w-4 mr-2' />
+                <Trash2 className='h-4 w-4 mr-2 bg-destructive/10 text-destructive' />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>

@@ -15,12 +15,12 @@ import {
   CommandList
 } from '@/components/ui/command'
 import { useSearch } from '@/hooks/use-search'
-// import { api } from "@/convex/_generated/api";
+import { getCurrentUser } from '@/lib/auth'
 
-export const SearchCommand = () => {
-  // const { user } = useUser();
+export const SearchCommand = async () => {
+  const user = await getCurrentUser()
+
   const router = useRouter()
-  // const documents = useQuery(api.documents.getSearch);
   const [isMounted, setIsMounted] = useState(false)
 
   const toggle = useSearch((store) => store.toggle)
@@ -54,7 +54,7 @@ export const SearchCommand = () => {
 
   return (
     <CommandDialog open={isOpen} onOpenChange={onClose}>
-      <CommandInput placeholder={`Search ${user?.fullName}'s Jotion...`} />
+      <CommandInput placeholder={`Search ${user?.username}'s Dnote...`} />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         <CommandGroup heading='Documents'>

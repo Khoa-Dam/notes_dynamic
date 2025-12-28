@@ -32,12 +32,12 @@ type NavItem = {
 }
 
 const navItems: NavItem[] = [
-  {
-    title: 'Search',
-    description: 'Find your file',
-    icon: Search,
-    content: SearchCommand
-  },
+  // {
+  //   title: 'Search',
+  //   description: 'Find your file',
+  //   icon: Search,
+  //   content: SearchCommand
+  // },
   {
     title: 'My Workspaces',
     description: 'Manage your workspaces',

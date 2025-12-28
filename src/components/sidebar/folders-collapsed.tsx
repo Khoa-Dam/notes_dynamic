@@ -328,15 +328,18 @@ export function FoldersCollapsed() {
           const folderFiles = files.filter((f) => f.folderId === id)
 
           return (
-            <NavigationMenuItem key={id!}>
+            <NavigationMenuItem
+              key={id!}
+              className='flex items-center justify-center'
+            >
               <NavigationMenuTrigger
                 showIndicator={false}
-                className='size-10 p-0'
+                className='size-10 p-0 flex items-center justify-center'
               >
                 {!iconId ? (
                   <FolderIcon className='size-5' />
                 ) : (
-                  <span className='text-lg'>{iconId}</span>
+                  <span className='text-lg '>{iconId}</span>
                 )}
               </NavigationMenuTrigger>
 
@@ -433,22 +436,22 @@ export function FoldersCollapsed() {
                         <div
                           key={id}
                           className={cn(
-                            'group w-full justify-between',
+                            'group w-full flex justify-between',
                             buttonVariants({
-                              size: 'sm',
+                              size: 'lg',
                               variant: 'ghost'
                             })
                           )}
                         >
                           <Link
                             href={`/dashboard/${workspaceId}/${id}`}
-                            className='flex w-full items-center gap-0.5'
+                            className='flex w-full items-center gap-0.5 flex items-center justify-center'
                           >
-                            <span className='mr-2 shrink-0'>
+                            <span className='mr-2 shrink-0 flex items-center justify-center'>
                               {iconId ? (
                                 iconId
                               ) : (
-                                <FileIcon className='size-4' />
+                                <FileIcon className='size-5' />
                               )}
                             </span>
                             {title}
@@ -458,11 +461,11 @@ export function FoldersCollapsed() {
                             <TooltipTrigger asChild>
                               <Button
                                 size='icon'
-                                variant='ghost'
+                                variant='default'
                                 onClick={currentlyInDev}
-                                className='invisible z-10 ml-auto size-7 shrink-0 text-muted-foreground group-hover:visible'
+                                className=' z-10 ml-auto size-7 shrink-0 text-muted-foreground group-hover:visible'
                               >
-                                <Edit2 className='size-4' />
+                                <Edit2 className='size-6' />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>Edit file</TooltipContent>

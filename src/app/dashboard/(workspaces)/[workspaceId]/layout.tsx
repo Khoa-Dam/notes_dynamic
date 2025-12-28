@@ -7,6 +7,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { getFiles, getFolders } from '@/lib/db/queries'
 import { ResizableLayout } from '../components/resizable-layout'
 import Stopwatch from '@/components/stop-watch'
+import FloatingYoutubePlayer from '@/components/floating-youtube-player'
 
 export const WorkspaceLayout: React.FCC<{
   params: Promise<{ workspaceId: string }>
@@ -37,6 +38,7 @@ export const WorkspaceLayout: React.FCC<{
         defaultCollapsed={defaultCollapsed as boolean}
       >
         <Stopwatch />
+        <FloatingYoutubePlayer />
         {children}
       </ResizableLayout>
     </AppStateProvider>
