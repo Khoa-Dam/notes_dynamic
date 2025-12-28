@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutGrid, Trash2, User2 } from "lucide-react";
+import { LayoutGrid, Search, Trash2, User2 } from "lucide-react";
 
 import type { LucideIcon } from "lucide-react";
 
@@ -31,6 +31,12 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
+  {
+    title: 'Search',
+    description: 'Find your file',
+    icon: Search,
+    content: ,
+  },
   {
     title: "My Workspaces",
     description: "Manage your workspaces",

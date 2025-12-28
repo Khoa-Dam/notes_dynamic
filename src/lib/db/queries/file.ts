@@ -1,13 +1,17 @@
-"use server";
+'use server'
 
-import { unstable_cache as cache, revalidateTag, revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
-import { validate } from "uuid";
+import {
+  unstable_cache as cache,
+  revalidateTag,
+  revalidatePath
+} from 'next/cache'
+import { eq } from 'drizzle-orm'
+import { validate } from 'uuid'
 
-import type { File } from "@/types/db";
+import type { File } from '@/types/db'
 
-import { db } from "..";
-import { files } from "../schema";
+import { db } from '..'
+import { files } from '../schema'
 
 /**
  * Create a new file
@@ -16,14 +20,14 @@ import { files } from "../schema";
  */
 export async function createFile(file: File) {
   try {
-    const [data] = await db.insert(files).values(file).returning();
+    const [data] = await db.insert(files).values(file).returning()
 
-    return data;
+    return data
   } catch (e) {
-    console.error((e as Error).message);
-    throw new Error("Failed to create file");
+    console.error((e as Error).message)
+    throw new Error('Failed to create file')
   } finally {
-    revalidateTag("get_files", {});
+    revalidateTag('get_files', {})
   }
 }
 
@@ -34,10 +38,10 @@ export async function createFile(file: File) {
  */
 export const getFiles = cache(
   async (workspaceId: string) => {
-    const isValid = validate(workspaceId);
+    const isValid = validate(workspaceId)
 
     if (!isValid) {
-      throw new Error("Invalid workspace ID");
+      throw new Error('Invalid workspace ID')
     }
 
     try {
@@ -45,19 +49,19 @@ export const getFiles = cache(
         .select()
         .from(files)
         .orderBy(files.createdAt)
-        .where(eq(files.workspaceId, workspaceId));
+        .where(eq(files.workspaceId, workspaceId))
 
-      return data;
+      return data
     } catch (e) {
-      console.error((e as Error).message);
-      throw new Error("Failed to fetch files from the database");
+      console.error((e as Error).message)
+      throw new Error('Failed to fetch files from the database')
     }
   },
-  ["get_files"],
-  { tags: ["get_files"] }
-);
+  ['get_files'],
+  { tags: ['get_files'] }
+)
 
-export const getFilesFromDb = getFiles;
+export const getFilesFromDb = getFiles
 
 /**
  * Update a file
@@ -70,20 +74,20 @@ export async function updateFile(file: File) {
       .update(files)
       .set(file)
       .where(eq(files.id, file.id!))
-      .returning();
+      .returning()
 
-    return updatedFile;
+    return updatedFile
   } catch (e) {
-    console.error((e as Error).message);
-    throw new Error("Failed to update file");
+    console.error((e as Error).message)
+    throw new Error('Failed to update file')
   } finally {
-    revalidateTag("get_files", {});
-    revalidateTag("get_file_by_id", {});
-    revalidatePath("/dashboard", "layout");
+    revalidateTag('get_files', {})
+    revalidateTag('get_file_by_id', {})
+    revalidatePath('/dashboard', 'layout')
   }
 }
 
-export const updateFileInDb = updateFile;
+export const updateFileInDb = updateFile
 
 /**
  * Delete file by ID
@@ -95,20 +99,20 @@ export async function deleteFile(fileId: string) {
     const [deletedFile] = await db
       .delete(files)
       .where(eq(files.id, fileId))
-      .returning();
+      .returning()
 
-    return deletedFile;
+    return deletedFile
   } catch (e) {
-    console.error((e as Error).message);
-    throw new Error("Failed to delete file");
+    console.error((e as Error).message)
+    throw new Error('Failed to delete file')
   } finally {
-    revalidateTag("get_files", {});
-    revalidateTag("get_file_by_id", {});
-    revalidatePath("/dashboard", "layout");
+    revalidateTag('get_files', {})
+    revalidateTag('get_file_by_id', {})
+    revalidatePath('/dashboard', 'layout')
   }
 }
 
-export const deleteFileFromDb = deleteFile;
+export const deleteFileFromDb = deleteFile
 
 /**
  * Get file by ID
@@ -117,10 +121,10 @@ export const deleteFileFromDb = deleteFile;
  */
 export const getFileById = cache(
   async (fileId: string) => {
-    const isValid = validate(fileId);
+    const isValid = validate(fileId)
 
     if (!isValid) {
-      throw new Error("Invalid file ID");
+      throw new Error('Invalid file ID')
     }
 
     try {
@@ -128,14 +132,14 @@ export const getFileById = cache(
         .select()
         .from(files)
         .where(eq(files.id, fileId))
-        .limit(1);
+        .limit(1)
 
-      return file;
+      return file
     } catch (e) {
-      console.error((e as Error).message);
-      throw new Error("Failed to fetch file from the database");
+      console.error((e as Error).message)
+      throw new Error('Failed to fetch file from the database')
     }
   },
-  ["get_file_by_id"],
-  { tags: ["get_file_by_id"] }
-);
+  ['get_file_by_id'],
+  { tags: ['get_file_by_id'] }
+)

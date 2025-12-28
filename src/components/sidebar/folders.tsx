@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import React, { useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import React, { useState } from 'react'
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   Check,
   ChevronDown,
@@ -14,36 +14,36 @@ import {
   Plus,
   Trash,
   Trash2,
-  X,
-} from "lucide-react";
-import { toast } from "sonner";
-import { v4 as uuid } from "uuid";
+  X
+} from 'lucide-react'
+import { toast } from 'sonner'
+import { v4 as uuid } from 'uuid'
 
-import type { File, Folder } from "@/types/db";
+import type { File, Folder } from '@/types/db'
 
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
-import { useAppState } from "@/hooks/use-app-state";
+  ContextMenuTrigger
+} from '@/components/ui/context-menu'
+import { useAppState } from '@/hooks/use-app-state'
 import {
   createFile,
   createFolder,
   deleteFileFromDb,
   deleteFolderFromDb,
   updateFileInDb,
-  updateFolderInDb,
-} from "@/lib/db/queries";
-import { cn, currentlyInDev, isAppleDevice } from "@/lib/utils";
-import { EmojiPicker } from "../emoji-picker";
+  updateFolderInDb
+} from '@/lib/db/queries'
+import { cn, currentlyInDev, isAppleDevice } from '@/lib/utils'
+import { EmojiPicker } from '../emoji-picker'
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger,
-} from "../ui/accordion";
+  AccordionTrigger
+} from '../ui/accordion'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,17 +53,17 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
-} from "../ui/alert-dialog";
-import { Button, buttonVariants } from "../ui/button";
-import { Input } from "../ui/input";
-import { Kbd } from "../ui/kbd";
-import { ScrollArea, ScrollBar } from "../ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+  AlertDialogTrigger
+} from '../ui/alert-dialog'
+import { Button, buttonVariants } from '../ui/button'
+import { Input } from '../ui/input'
+import { Kbd } from '../ui/kbd'
+import { ScrollArea, ScrollBar } from '../ui/scroll-area'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 
 export function Folders() {
-  const pathname = usePathname();
-  const router = useRouter();
+  const pathname = usePathname()
+  const router = useRouter()
 
   const {
     files: stateFiles,
@@ -73,263 +73,262 @@ export function Folders() {
     updateFile,
     addFolder,
     deleteFolder,
-    updateFolder,
-  } = useAppState();
+    updateFolder
+  } = useAppState()
 
-  const files = stateFiles.filter((file) => !file.inTrash);
-  const folders = stateFolders.filter((folder) => !folder.inTrash);
+  const files = stateFiles.filter((file) => !file.inTrash)
+  const folders = stateFolders.filter((folder) => !folder.inTrash)
 
-  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
-  const [openedFolders, setOpenedFolders] = useState<string[]>([]);
-  const [folderName, setFolderName] = useState("Untitled");
-  const [selectedEmoji, setSelectedEmoji] = useState("");
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false)
+  const [openedFolders, setOpenedFolders] = useState<string[]>([])
+  const [folderName, setFolderName] = useState('Untitled')
+  const [selectedEmoji, setSelectedEmoji] = useState('')
 
   // Helper function to create initial content with icon and header
-  function createInitialContent(icon: string = "📄"): string {
+  function createInitialContent(icon: string = '📄'): string {
     const initialBlocks = [
       {
         id: crypto.randomUUID(),
-        type: "paragraph" as const,
+        type: 'paragraph' as const,
         props: {
-          textColor: "default",
-          backgroundColor: "default",
-          textAlignment: "left",
+          textColor: 'default',
+          backgroundColor: 'default',
+          textAlignment: 'left'
         },
         content: [
           {
-            type: "text",
+            type: 'text',
             text: icon,
-            styles: {},
-          },
+            styles: {}
+          }
         ],
-        children: [],
+        children: []
       },
       {
         id: crypto.randomUUID(),
-        type: "heading" as const,
+        type: 'heading' as const,
         props: {
           level: 1,
-          textColor: "default",
-          backgroundColor: "default",
-          textAlignment: "left",
+          textColor: 'default',
+          backgroundColor: 'default',
+          textAlignment: 'left'
         },
         content: [
           {
-            type: "text",
-            text: "New page",
-            styles: {},
-          },
+            type: 'text',
+            text: 'New page',
+            styles: {}
+          }
         ],
-        children: [],
-      },
-    ];
-    return JSON.stringify(initialBlocks);
+        children: []
+      }
+    ]
+    return JSON.stringify(initialBlocks)
   }
 
   function createFolderToggle() {
-    setIsCreatingFolder((prev) => !prev);
+    setIsCreatingFolder((prev) => !prev)
   }
 
   async function createFileToggle(folderId: string) {
-    const tempId = uuid();
-    const initialContent = createInitialContent();
+    const tempId = uuid()
+    const initialContent = createInitialContent()
     const newFile: File = {
       id: tempId,
-      title: "New page",
-      iconId: "📄",
+      title: 'New page',
+      iconId: '📄',
       folderId,
-      workspaceId: pathname.split("/")[2],
+      workspaceId: pathname.split('/')[2],
       data: initialContent,
-      inTrash: false,
-    };
+      inTrash: false
+    }
 
     // Add file optimistically
-    addFile(newFile);
+    addFile(newFile)
 
     try {
-      const createdFile = await createFile(newFile);
+      const createdFile = await createFile(newFile)
       // Remove temp file and add the real one from server
-      deleteFile(tempId);
-      addFile(createdFile);
-      toast.success("File created.");
+      deleteFile(tempId)
+      addFile(createdFile)
+      toast.success('File created.')
 
       // Navigate to the new file
-      router.push(`/dashboard/${pathname.split("/")[2]}/${createdFile.id}`);
+      router.push(`/dashboard/${pathname.split('/')[2]}/${createdFile.id}`)
 
       // Delay refresh to allow cache to update
       setTimeout(() => {
-        router.refresh();
-      }, 100);
+        router.refresh()
+      }, 100)
     } catch (error) {
       // Remove temp file on error
-      deleteFile(tempId);
-      toast.error("Something went wrong! Unable to create file.");
+      deleteFile(tempId)
+      toast.error('Something went wrong! Unable to create file.')
     }
   }
 
   async function createFolderHandler(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+    e.preventDefault()
 
     if (folderName.length < 3) {
-      toast.warning("Folder name must be at least 3 characters long.");
-      return;
+      toast.warning('Folder name must be at least 3 characters long.')
+      return
     }
 
-    const tempId = uuid();
+    const tempId = uuid()
     const newFolder: Folder = {
       id: tempId,
       title: folderName,
       iconId: selectedEmoji,
-      workspaceId: pathname.split("/")[2],
+      workspaceId: pathname.split('/')[2],
       data: null,
-      inTrash: false,
-    };
+      inTrash: false
+    }
 
     // Add folder optimistically
-    addFolder(newFolder);
+    addFolder(newFolder)
 
     try {
-      const createdFolder = await createFolder(newFolder);
+      const createdFolder = await createFolder(newFolder)
       // Remove temp folder and add the real one from server
-      deleteFolder(tempId);
-      addFolder(createdFolder);
-      toast.success("Folder created.");
-      router.refresh();
+      deleteFolder(tempId)
+      addFolder(createdFolder)
+      toast.success('Folder created.')
+      router.refresh()
     } catch (error) {
       // Remove temp folder on error
-      deleteFolder(tempId);
-      toast.error("Something went wrong! Unable to create folder.");
+      deleteFolder(tempId)
+      toast.error('Something went wrong! Unable to create folder.')
     }
 
-    setSelectedEmoji("");
-    setFolderName("Untitled");
-    setIsCreatingFolder(false);
+    setSelectedEmoji('')
+    setFolderName('Untitled')
+    setIsCreatingFolder(false)
   }
 
-
   async function moveFileToTrash(fileId: string) {
-    const file = files.find((f) => f.id === fileId);
+    const file = files.find((f) => f.id === fileId)
 
     if (!file) {
-      toast.error("Something went wrong", { description: "File not found." });
-      return;
+      toast.error('Something went wrong', { description: 'File not found.' })
+      return
     }
 
-    const updatedFile: File = { ...file, inTrash: true };
-    updateFile(updatedFile);
+    const updatedFile: File = { ...file, inTrash: true }
+    updateFile(updatedFile)
 
     toast.promise(
       updateFileInDb(updatedFile).then(() => {
-        router.refresh();
+        router.refresh()
       }),
       {
-        loading: "Moving file to trash...",
-        success: "File moved to trash.",
-        error: "Something went wrong! Unable to move file to trash.",
+        loading: 'Moving file to trash...',
+        success: 'File moved to trash.',
+        error: 'Something went wrong! Unable to move file to trash.'
       }
-    );
+    )
   }
 
   async function moveFolderToTrash(folderId: string) {
-    const folder = folders.find((f) => f.id === folderId);
+    const folder = folders.find((f) => f.id === folderId)
 
     if (!folder) {
-      toast.error("Something went wrong", { description: "Folder not found." });
-      return;
+      toast.error('Something went wrong', { description: 'Folder not found.' })
+      return
     }
 
-    const updatedFolder: Folder = { ...folder, inTrash: true };
-    updateFolder(updatedFolder);
+    const updatedFolder: Folder = { ...folder, inTrash: true }
+    updateFolder(updatedFolder)
     toast.promise(
       updateFolderInDb({ ...folder, inTrash: true }).then(() => {
-        router.refresh();
+        router.refresh()
       }),
       {
-        loading: "Moving folder to trash...",
-        success: "Folder moved to trash.",
-        error: "Something went wrong! Unable to move folder to trash.",
+        loading: 'Moving folder to trash...',
+        success: 'Folder moved to trash.',
+        error: 'Something went wrong! Unable to move folder to trash.'
       }
-    );
+    )
   }
 
   async function deleteFileHandler(fileId: string) {
-    const file = files.find((f) => f.id === fileId);
-    if (!file) return;
+    const file = files.find((f) => f.id === fileId)
+    if (!file) return
 
-    deleteFile(fileId);
+    deleteFile(fileId)
 
     try {
-      await deleteFileFromDb(fileId);
-      toast.success("File deleted.");
-      router.refresh();
+      await deleteFileFromDb(fileId)
+      toast.success('File deleted.')
+      router.refresh()
     } catch (error) {
-      addFile(file);
-      toast.error("Something went wrong! Unable to delete file.");
+      addFile(file)
+      toast.error('Something went wrong! Unable to delete file.')
     }
   }
 
   async function deleteFolderHandler(folderId: string) {
-    const folder = folders.find((f) => f.id === folderId);
-    if (!folder) return;
+    const folder = folders.find((f) => f.id === folderId)
+    if (!folder) return
 
-    deleteFolder(folderId);
+    deleteFolder(folderId)
 
     try {
-      await deleteFolderFromDb(folderId);
-      toast.success("Folder deleted.");
-      router.refresh();
+      await deleteFolderFromDb(folderId)
+      toast.success('Folder deleted.')
+      router.refresh()
     } catch (error) {
-      addFolder(folder);
-      toast.error("Something went wrong! Unable to delete folder.");
+      addFolder(folder)
+      toast.error('Something went wrong! Unable to delete folder.')
     }
   }
 
   return (
     <>
-      <div className="flex items-center justify-between px-4">
-        <p className="text-sm font-medium text-muted-foreground">Folders</p>
+      <div className='flex items-center justify-between px-4'>
+        <p className='text-sm font-medium text-muted-foreground'>Folders</p>
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
             <Button
-              size="icon"
-              variant="ghost"
+              size='icon'
+              variant='ghost'
               onClick={createFolderToggle}
-              className="size-7 text-muted-foreground"
+              className='size-7 text-muted-foreground'
             >
               {isCreatingFolder ? (
-                <X className="size-4 duration-300 animate-in spin-in-90" />
+                <X className='size-4 duration-300 animate-in spin-in-90' />
               ) : (
-                <Plus className="size-[18px] duration-300 animate-out spin-out-90" />
+                <Plus className='size-[18px] duration-300 animate-out spin-out-90' />
               )}
             </Button>
           </TooltipTrigger>
 
           <TooltipContent>
-            {isCreatingFolder ? "Cancel" : "Create New folder"}
+            {isCreatingFolder ? 'Cancel' : 'Create New folder'}
           </TooltipContent>
         </Tooltip>
       </div>
 
-      <div className="-mb-2 flex grow flex-col gap-1 overflow-hidden">
+      <div className='-mb-2 flex grow flex-col gap-1 overflow-hidden'>
         {isCreatingFolder || folders.length ? (
           <ScrollArea>
             <Accordion
-              type="multiple"
+              type='multiple'
               value={openedFolders}
               onValueChange={setOpenedFolders}
-              className="px-4 py-1"
+              className='px-4 py-1'
             >
               {isCreatingFolder && (
-                <form onSubmit={createFolderHandler} className="relative mb-1">
+                <form onSubmit={createFolderHandler} className='relative mb-1'>
                   <EmojiPicker
-                    title="Select an emoji"
-                    side="right"
-                    align="start"
+                    title='Select an emoji'
+                    side='right'
+                    align='start'
                     getValue={setSelectedEmoji}
-                    className="absolute inset-y-0 left-1 my-auto inline-flex size-7 items-center justify-center rounded-md hover:bg-muted"
+                    className='absolute inset-y-0 left-1 my-auto inline-flex size-7 items-center justify-center rounded-md hover:bg-muted'
                   >
                     {!selectedEmoji ? (
-                      <FolderIcon className="size-4" />
+                      <FolderIcon className='size-4' />
                     ) : (
                       selectedEmoji
                     )}
@@ -340,146 +339,145 @@ export function Folders() {
                     value={folderName}
                     onChange={(e) => setFolderName(e.target.value)}
                     className={cn(
-                      "h-9 px-9",
-                      folderName.length < 3 && "ring-destructive!"
+                      'h-9 px-9',
+                      folderName.length < 3 && 'ring-destructive!'
                     )}
                   />
 
                   <Button
-                    size="icon"
-                    variant="ghost"
-                    className="absolute inset-y-0 right-1 my-auto size-7 text-muted-foreground"
+                    size='icon'
+                    variant='ghost'
+                    className='absolute inset-y-0 right-1 my-auto size-7 text-muted-foreground'
                   >
-                    <Check className="size-4" />
+                    <Check className='size-4' />
                   </Button>
                 </form>
               )}
 
               {folders.map(({ id, title, iconId }) => {
-                const folderFiles = files.filter((f) => f.folderId === id);
+                const folderFiles = files.filter((f) => f.folderId === id)
 
                 return (
                   <AccordionItem
                     key={id}
                     value={id!}
-                    className="my-px border-none"
+                    className='my-px border-none'
                   >
                     <ContextMenu>
                       <ContextMenuTrigger>
                         <AccordionTrigger
                           className={cn(
-                            buttonVariants({ size: "sm", variant: "ghost" }),
-                            "justify-start border-none hover:no-underline data-[state=open]:bg-secondary",
-                            "[&>svg]:hidden"
+                            buttonVariants({ size: 'sm', variant: 'ghost' }),
+                            'group/trigger justify-start border-none hover:no-underline data-[state=open]:bg-secondary',
+                            '[&>svg]:hidden'
                           )}
                         >
-                          <span className="mr-2">
+                          <span className='mr-2'>
                             {iconId ? (
                               iconId
                             ) : openedFolders.includes(id!) ? (
-                              <FolderOpen className="size-4 shrink-0" />
+                              <FolderOpen className='size-4 shrink-0' />
                             ) : (
-                              <FolderIcon className="size-4 shrink-0" />
+                              <FolderIcon className='size-4 shrink-0' />
                             )}
                           </span>
 
                           {title}
 
-                          <ChevronDown className="invisible ml-auto size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover/trigger:visible group-data-[state=open]/trigger:visible group-data-[state=open]/trigger:rotate-180" />
+                          <div className='ml-auto'>
+                            <ChevronDown className=' size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover/trigger:visible group-data-[state=open]/trigger:visible group-data-[state=open]/trigger:rotate-180' />
+                          </div>
                         </AccordionTrigger>
                       </ContextMenuTrigger>
 
-                      <ContextMenuContent className="w-56">
+                      <ContextMenuContent className='w-56'>
                         <ContextMenuItem
                           onClick={() => createFileToggle(id!)}
-                          className="cursor-pointer"
+                          className='cursor-pointer'
                         >
-                          <FileIcon className="mr-2 size-4 shrink-0" />
+                          <FileIcon className='mr-2 size-4 shrink-0' />
                           New File
-                          <Kbd className="ml-auto">
-                            {isAppleDevice() ? "⌘" : "Ctrl"}+N
+                          <Kbd className='ml-auto'>
+                            {isAppleDevice() ? '⌘' : 'Ctrl'}+N
                           </Kbd>
                         </ContextMenuItem>
 
-
-
                         <ContextMenuItem
                           onKeyDown={(e) => {
-                            e.preventDefault();
+                            e.preventDefault()
 
-                            if (e.ctrlKey && e.key.toLowerCase() === "d") {
-                              moveFolderToTrash(id!);
+                            if (e.ctrlKey && e.key.toLowerCase() === 'd') {
+                              moveFolderToTrash(id!)
                             }
                           }}
                           onClick={() => moveFolderToTrash(id!)}
-                          className="cursor-pointer text-red-500!"
+                          className='cursor-pointer text-red-500!'
                         >
-                          <Trash2 className="mr-2 size-4 shrink-0" />
+                          <Trash2 className='mr-2 size-4 shrink-0' />
                           Move to Trash
-                          <Kbd className="ml-auto">
-                            {isAppleDevice() ? "⌘" : "Ctrl"}+D
+                          <Kbd className='ml-auto'>
+                            {isAppleDevice() ? '⌘' : 'Ctrl'}+D
                           </Kbd>
                         </ContextMenuItem>
 
                         <ContextMenuItem
                           onKeyDown={(e) => {
-                            e.preventDefault();
+                            e.preventDefault()
 
                             if (
                               e.ctrlKey &&
                               e.shiftKey &&
-                              e.key.toLowerCase() === "d"
+                              e.key.toLowerCase() === 'd'
                             ) {
-                              deleteFolderHandler(id!);
+                              deleteFolderHandler(id!)
                             }
                           }}
                           onClick={() => deleteFolderHandler(id!)}
-                          className="cursor-pointer text-red-500!"
+                          className='cursor-pointer text-red-500!'
                         >
-                          <Trash className="mr-2 size-4 shrink-0" />
+                          <Trash className='mr-2 size-4 shrink-0' />
                           Delete
-                          <Kbd className="ml-auto">
-                            {isAppleDevice() ? "⌘" : "Ctrl"}+Shift+D
+                          <Kbd className='ml-auto'>
+                            {isAppleDevice() ? '⌘' : 'Ctrl'}+Shift+D
                           </Kbd>
                         </ContextMenuItem>
                       </ContextMenuContent>
                     </ContextMenu>
 
-                    <AccordionContent className="pb-2 pl-2 pt-1">
+                    <AccordionContent className='pb-2 pl-2 pt-1'>
                       {folderFiles.length > 0 ? (
                         folderFiles.map(
                           ({ id, title, iconId, workspaceId }) => (
                             <div
                               key={id}
                               className={cn(
-                                "group w-full justify-between",
-                                buttonVariants({ size: "sm", variant: "ghost" })
+                                'group w-full justify-between',
+                                buttonVariants({ size: 'sm', variant: 'ghost' })
                               )}
                             >
                               <Link
                                 href={`/dashboard/${workspaceId}/${id}`}
-                                className="flex w-full items-center gap-0.5"
+                                className='flex w-full items-center gap-0.5'
                               >
-                                <span className="mr-2 shrink-0">
+                                <span className='mr-2 shrink-0'>
                                   {iconId ? (
                                     iconId
                                   ) : (
-                                    <FileIcon className="size-4" />
+                                    <FileIcon className='size-4' />
                                   )}
                                 </span>
                                 {title}
                               </Link>
-
 
                               <AlertDialog>
                                 <Tooltip delayDuration={0}>
                                   <AlertDialogTrigger asChild>
                                     <TooltipTrigger asChild>
                                       <Button
-                                        variant="ghost"
-                                        className="size-7 p-0 text-muted-foreground hover:text-red-500"
+                                        variant='ghost'
+                                        className='size-7 p-0 text-muted-foreground hover:text-red-500'
                                       >
-                                        <Trash className="size-4" />
+                                        <Trash className='size-4' />
                                       </Button>
                                     </TooltipTrigger>
                                   </AlertDialogTrigger>
@@ -503,14 +501,14 @@ export function Folders() {
                                     </AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() => moveFileToTrash(id!)}
-                                      className="bg-destructive/10 text-destructive hover:bg-destructive/15"
+                                      className='bg-destructive/10 text-destructive hover:bg-destructive/15'
                                     >
                                       Move to trash
                                     </AlertDialogAction>
                                     <AlertDialogAction
                                       onClick={() => deleteFileHandler(id!)}
                                       className={buttonVariants({
-                                        variant: "destructive",
+                                        variant: 'destructive'
                                       })}
                                     >
                                       Delete
@@ -522,30 +520,30 @@ export function Folders() {
                           )
                         )
                       ) : (
-                        <div className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed p-4 text-muted-foreground">
+                        <div className='flex flex-col items-center justify-center gap-2 rounded-md border border-dashed p-4 text-muted-foreground'>
                           <FileX size={20} />
 
-                          <p className="text-center text-sm">
+                          <p className='text-center text-sm'>
                             You don&apos;t have any file yet.
                           </p>
                         </div>
                       )}
                     </AccordionContent>
                   </AccordionItem>
-                );
+                )
               })}
             </Accordion>
             <ScrollBar />
           </ScrollArea>
         ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-4 px-4 text-muted-foreground">
+          <div className='flex h-full flex-col items-center justify-center gap-4 px-4 text-muted-foreground'>
             <FolderX size={32} />
-            <p className="text-center text-sm">
+            <p className='text-center text-sm'>
               You don&apos;t have any folders yet.
             </p>
           </div>
         )}
       </div>
     </>
-  );
+  )
 }

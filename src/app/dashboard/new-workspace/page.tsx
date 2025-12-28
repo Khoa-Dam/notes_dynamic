@@ -1,57 +1,57 @@
-import Image from "next/image";
+import Image from 'next/image'
 
-import { AppStateProvider } from "@/components/app-state-provider";
+import { AppStateProvider } from '@/components/app-state-provider'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { SidebarMobileWrapper } from "@/components/sidebar/sidebar-mobile-wrapper";
-import { getCurrentUser } from "@/lib/auth";
-import { WorkspaceForm } from "./workspace-form";
+  CardTitle
+} from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { SidebarMobileWrapper } from '@/components/sidebar/sidebar-mobile-wrapper'
+import { getCurrentUser } from '@/lib/auth'
+import { WorkspaceForm } from './workspace-form'
 
 export const metadata = {
-  title: "Create a workspace",
-  description: "Create a new workspace to organize your projects.",
-};
+  title: 'Create a workspace',
+  description: 'Create a new workspace to organize your projects.'
+}
 
 export default async function WorkspaceSetupPage() {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser()
 
   return (
     <AppStateProvider user={user!} files={[]} folders={[]}>
-      <div className="flex h-screen items-center justify-center">
-        <section className="dark relative hidden size-full items-center justify-center lg:flex">
-          <div className="absolute inset-0 bg-zinc-900" />
+      <div className='flex h-screen items-center justify-center'>
+        <section className='dark relative hidden size-full items-center justify-center lg:flex'>
+          <div className='absolute inset-0 bg-zinc-900' />
 
           <Image
             priority
-            src="/illustrations/office-cubicle.svg"
-            alt="Get started"
+            src='/illustrations/office-cubicle.svg'
+            alt='Get started'
             width={450}
             height={450}
-            className="invert"
+            className='invert'
           />
         </section>
 
-        <Separator orientation="vertical" />
+        <Separator orientation='vertical' />
 
-        <section className="flex size-full flex-col items-center justify-center gap-14 px-4">
+        <section className='flex size-full flex-col items-center justify-center gap-14 px-4'>
           {/* Mobile Menu Button */}
-          <div className="absolute left-4 top-4 lg:hidden">
+          <div className='absolute left-4 top-4 lg:hidden'>
             <SidebarMobileWrapper />
           </div>
 
-          <h1 className="text-center font-heading text-4xl font-bold [text-shadow:0_4px_0_#e1e1e1]dark:bg-gradient-to-br dark:from-neutral-200 dark:to-neutral-600 dark:bg-clip-text dark:text-transparent dark:text-shadow-none sm:text-5xl md:text-6xl">
+          <h1 className='text-center font-heading text-4xl font-bold [text-shadow:0_4px_0_#e1e1e1]dark:bg-gradient-to-br dark:from-neutral-200 dark:to-neutral-600 dark:bg-clip-text dark:text-transparent dark:text-shadow-none sm:text-5xl md:text-6xl'>
             Create your first
             <br />
             workspace
           </h1>
 
-          <Card className="z-10 h-fit w-full max-w-xl shadow-lg">
+          <Card className='z-10 h-fit w-full max-w-xl shadow-lg'>
             <CardHeader>
               <CardTitle>Create a new workspace.</CardTitle>
               <CardDescription>
@@ -67,5 +67,5 @@ export default async function WorkspaceSetupPage() {
         </section>
       </div>
     </AppStateProvider>
-  );
+  )
 }
