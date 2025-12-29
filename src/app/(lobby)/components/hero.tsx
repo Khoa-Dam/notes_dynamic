@@ -9,7 +9,7 @@ export function Hero() {
   return (
     <section
       id='hero'
-      className='relative flex min-h-[90vh] w-full flex-col items-center justify-center overflow-hidden text-center'
+      className='relative flex min-h-[90vh] w-full flex-col items-center justify-center scroll-auto text-center'
     >
       {/* Background gradient */}
       <div className='absolute inset-0 -z-10 bg-linear-to-b from-background via-background to-muted/20' />

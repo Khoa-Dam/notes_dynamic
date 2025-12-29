@@ -14,7 +14,9 @@ import {
   Plus,
   Trash,
   Trash2,
-  X
+  X,
+  ArrowDownWideNarrow,
+  ArrowUpWideNarrow
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { v4 as uuid } from 'uuid'
@@ -58,6 +60,12 @@ import {
 import { Button, buttonVariants } from '../ui/button'
 import { Input } from '../ui/input'
 import { Kbd } from '../ui/kbd'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '../ui/dropdown-menu'
 import { ScrollArea, ScrollBar } from '../ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 
@@ -85,6 +93,33 @@ export function Folders() {
   const [selectedEmoji, setSelectedEmoji] = useState('')
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
+  const [sortBy, setSortBy] = useState<'none' | 'name' | 'createdAt'>('none')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+
+  const getSortedFolders = (
+    folders: Folder[],
+    sortBy: 'none' | 'name' | 'createdAt',
+    sortOrder: 'desc' | 'asc'
+  ) => {
+    return [...folders].sort((a, b) => {
+      if (sortBy === 'name') {
+        const nameA = a.title.toLowerCase()
+        const nameB = b.title.toLowerCase()
+        if (nameA < nameB) return sortOrder === 'asc' ? -1 : 1
+        if (nameA > nameB) return sortOrder === 'asc' ? 1 : -1
+        return 0
+      } else if (sortBy === 'createdAt') {
+        const dateA = new Date(a.createdAt!).getTime()
+        const dateB = new Date(b.createdAt!).getTime()
+        if (dateA < dateB) return sortOrder === 'asc' ? -1 : 1
+        if (dateA > dateB) return sortOrder === 'asc' ? 1 : -1
+        return 0
+      }
+      return 0
+    })
+  }
+
+  const sortedFolders = getSortedFolders(folders, sortBy, sortOrder)
 
   // Helper function to create initial content with icon and header
   function createInitialContent(icon: string = '📄'): string {
@@ -348,26 +383,91 @@ export function Folders() {
     <>
       <div className='flex items-center justify-between px-4'>
         <p className='text-sm font-medium text-muted-foreground'>Folders</p>
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <Button
-              size='icon'
-              variant='ghost'
-              onClick={createFolderToggle}
-              className='size-7 text-muted-foreground'
-            >
-              {isCreatingFolder ? (
-                <X className='size-6 duration-300 animate-in spin-in-90' />
-              ) : (
-                <Plus className='size-[18px] duration-300 animate-out spin-out-90' />
-              )}
-            </Button>
-          </TooltipTrigger>
+        <div className='flex items-center gap-1'>
+          <DropdownMenu>
+            <Tooltip delayDuration={0}>
+              <DropdownMenuTrigger asChild>
+                <TooltipTrigger asChild>
+                  <Button
+                    size='icon'
+                    variant='ghost'
+                    className='size-7 text-muted-foreground'
+                  >
+                    {sortOrder === 'asc' ? (
+                      <ArrowUpWideNarrow className='size-[18px]' />
+                    ) : (
+                      <ArrowDownWideNarrow className='size-[18px]' />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+              </DropdownMenuTrigger>
+              <TooltipContent>Sort Folders</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent side='bottom' align='end'>
+              <DropdownMenuItem
+                onClick={() => {
+                  setSortBy('name')
+                  setSortOrder('asc')
+                }}
+              >
+                Name (A-Z)
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setSortBy('name')
+                  setSortOrder('desc')
+                }}
+              >
+                Name (Z-A)
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setSortBy('createdAt')
+                  setSortOrder('desc')
+                }}
+              >
+                Last Updated (Newest First)
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setSortBy('createdAt')
+                  setSortOrder('asc')
+                }}
+              >
+                Last Updated (Oldest First)
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setSortBy('none')
+                  setSortOrder('asc')
+                }}
+              >
+                None
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-          <TooltipContent>
-            {isCreatingFolder ? 'Cancel' : 'Create New folder'}
-          </TooltipContent>
-        </Tooltip>
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <Button
+                size='icon'
+                variant='ghost'
+                onClick={createFolderToggle}
+                className='size-7 text-muted-foreground'
+              >
+                {isCreatingFolder ? (
+                  <X className='size-6 duration-300 animate-in spin-in-90' />
+                ) : (
+                  <Plus className='size-[18px] duration-300 animate-out spin-out-90' />
+                )}
+              </Button>
+            </TooltipTrigger>
+
+            <TooltipContent>
+              {isCreatingFolder ? 'Cancel' : 'Create New folder'}
+            </TooltipContent>
+          </Tooltip>
+        </div>
       </div>
 
       <div className='-mb-2 flex grow flex-col gap-1 overflow-hidden'>
@@ -415,14 +515,14 @@ export function Folders() {
                 </form>
               )}
 
-              {folders.map(({ id, title, iconId }) => {
+              {sortedFolders.map(({ id, title, iconId }) => {
                 const folderFiles = files.filter((f) => f.folderId === id)
 
                 return (
                   <AccordionItem
                     key={id}
                     value={id!}
-                    className='my-1 px-1 border-none'
+                    className='my-3 px-1 border-none'
                   >
                     <ContextMenu>
                       <ContextMenuTrigger>

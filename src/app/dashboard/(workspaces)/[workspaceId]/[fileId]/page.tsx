@@ -9,7 +9,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { ChevronLeft, MoreVertical, Trash2 } from 'lucide-react'
+import { ChevronLeft, MoreVertical, Trash2, FileDown } from 'lucide-react'
+import jsPDF from 'jspdf'
+import { toPng } from 'html-to-image' // Thư viện mới thay thế html2canvas
 
 import type { File } from '@/types/db'
 
@@ -59,9 +61,7 @@ export default function FilePage({ params }: PageProps) {
   useEffect(() => {
     getFileById(fileId)
       .then((data) => {
-        if (!data) {
-          return notFound()
-        }
+        if (!data) return notFound()
         setFile(data)
         setTitle(data.title)
         setContent(data.data ?? '')
@@ -91,17 +91,18 @@ export default function FilePage({ params }: PageProps) {
     750
   )
 
-  const onTitleChange = useCallback((newTitle: string) => {
-    setTitle(newTitle)
-  }, [])
-
-  const onContentChange = useCallback((newContent: string) => {
-    setContent(newContent)
-  }, [])
-
-  const onIconChange = useCallback((newIconId: string) => {
-    setIconId(newIconId)
-  }, [])
+  const onTitleChange = useCallback(
+    (newTitle: string) => setTitle(newTitle),
+    []
+  )
+  const onContentChange = useCallback(
+    (newContent: string) => setContent(newContent),
+    []
+  )
+  const onIconChange = useCallback(
+    (newIconId: string) => setIconId(newIconId),
+    []
+  )
 
   const onBannerUrlChange = useCallback(
     (newBannerUrl: string | null) => {
@@ -122,12 +123,67 @@ export default function FilePage({ params }: PageProps) {
       router.refresh()
     } catch (error) {
       toast.error('Failed to delete file')
-      console.error(error)
     }
   }
 
-  const handleBack = () => {
-    router.push(`/dashboard/${workspaceId}`)
+  const handleBack = () => router.push(`/dashboard/${workspaceId}`)
+
+  // --- HÀM XUẤT PDF MỚI ---
+  const handleExportPdf = async () => {
+    const element = document.getElementById('pdf-content')
+    if (!element) return toast.error('Không tìm thấy nội dung')
+
+    const loadingToast = toast.loading('Đang xử lý PDF chất lượng cao...')
+
+    try {
+      // 1. Lấy kích thước thực tế của nội dung (bao gồm cả phần bị khuất)
+      const width = element.scrollWidth
+      const height = element.scrollHeight
+
+      // 2. Chụp ảnh với cấu hình ép kiểu layout
+      const dataUrl = await toPng(element, {
+        pixelRatio: 2,
+        // backgroundColor: '#ffffff', // Ép màu nền trắng (hoặc lấy màu từ CSS)
+        width: width,
+        height: height,
+        style: {
+          // QUAN TRỌNG: Loại bỏ các giới hạn chiều rộng và căn giữa khi chụp
+          maxWidth: 'none',
+          width: `${width}px`,
+          height: `${height}px`,
+          margin: '',
+          padding: '40px', // Thêm lề cho đẹp khi vào PDF
+          transform: 'none'
+        },
+        filter: (node: HTMLElement) => {
+          const exclusionClasses = [
+            'chatbot-wrapper',
+            'bn-side-menu',
+            'bn-slash-menu'
+          ]
+          return !exclusionClasses.some((cls) =>
+            node.classList?.contains?.(cls)
+          )
+        }
+      })
+
+      // 3. Khởi tạo PDF
+      const pdf = new jsPDF({
+        orientation: width > height ? 'l' : 'p', // Tự động xoay trang nếu nội dung ngang
+        unit: 'px',
+        format: [width + 80, height + 80] // Khớp kích thước ảnh + padding
+      })
+
+      pdf.addImage(dataUrl, 'PNG', 0, 0, width + 80, height + 80)
+      pdf.save(`${title || 'document'}.pdf`)
+
+      toast.dismiss(loadingToast)
+      toast.success('Xuất PDF thành công!')
+    } catch (error) {
+      console.error('PDF Export Error:', error)
+      toast.dismiss(loadingToast)
+      toast.error('Lỗi: Thử lại hoặc giảm bớt ảnh dung lượng lớn')
+    }
   }
 
   if (isLoading) {
@@ -139,40 +195,39 @@ export default function FilePage({ params }: PageProps) {
             <Skeleton className='h-14 w-[50%]' />
             <Skeleton className='h-4 w-[80%]' />
             <Skeleton className='h-4 w-[40%]' />
-            <Skeleton className='h-4 w-[60%]' />
           </div>
         </div>
       </div>
     )
   }
 
-  // if (!file) {
-  //   return notFound()
-  // }
-
   return (
     <div className='pb-40'>
-      <div className='flex relative items-center justify-between border-b p-4'>
+      <div className='flex sticky top-0 z-1000 items-center justify-between border-b p-4'>
         <div className='flex items-center gap-4 flex-1'>
           <div className='lg:hidden'>
             <SidebarMobile />
           </div>
-          <Button
-            variant='ghost'
-            size='lg'
-            className='text-xl'
-            onClick={handleBack}
-          >
-            <ChevronLeft className='h-4 w-4 mr-2 text-xl' />
+          <Button variant='ghost' size='sm' onClick={handleBack}>
+            <ChevronLeft className='h-4 w-4 mr-2' />
             Back
           </Button>
         </div>
 
         <div className='flex items-center gap-2'>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={handleExportPdf}
+            className='flex items-center gap-2'
+          >
+            <FileDown className='h-4 w-4' />
+            Export PDF
+          </Button>
           <Publish initialData={file!} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant='ghost' size='lg'>
+              <Button variant='ghost' size='sm'>
                 <MoreVertical className='h-4 w-4' />
               </Button>
             </DropdownMenuTrigger>
@@ -181,7 +236,7 @@ export default function FilePage({ params }: PageProps) {
                 onClick={handleDelete}
                 className='text-destructive cursor-pointer'
               >
-                <Trash2 className='h-4 w-4 mr-2 bg-destructive/10 text-destructive' />
+                <Trash2 className='h-4 w-4 mr-2' />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -189,24 +244,30 @@ export default function FilePage({ params }: PageProps) {
         </div>
       </div>
 
-      <Cover
-        url={bannerUrl}
-        fileId={fileId}
-        onBannerUrlChange={onBannerUrlChange}
-      />
-      <div className='md:max-w-5xl lg:max-w-7xl mx-auto'>
-        <Toolbar
-          initialData={{ ...file, title, iconId }}
-          onTitleChange={onTitleChange}
-          onIconChange={onIconChange}
-        />
-        <FileEditor
-          workspaceId={workspaceId}
+      <div id='pdf-content' className='bg-background w-full h-full'>
+        <Cover
+          id='cover-section'
+          url={bannerUrl}
           fileId={fileId}
-          content={content}
-          onContentChange={onContentChange}
+          onBannerUrlChange={onBannerUrlChange}
         />
+        <div className='md:max-w-4xl lg:max-w-7xl mx-auto mt-10'>
+          <Toolbar
+            initialData={{ ...file, title, iconId }}
+            onTitleChange={onTitleChange}
+            onIconChange={onIconChange}
+          />
+          <FileEditor
+            id='file-editor-section'
+            workspaceId={workspaceId}
+            fileId={fileId}
+            content={content}
+            onContentChange={onContentChange}
+          />
+        </div>
+      </div>
 
+      <div className='chatbot-wrapper'>
         <Chatbot />
       </div>
     </div>
