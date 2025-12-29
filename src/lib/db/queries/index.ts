@@ -35,3 +35,9 @@ export {
   updateFileBanner,
   updateFileInDb,
 } from "./file";
+export {
+  getCollaborators,
+  addCollaborator,
+  removeCollaborator,
+  getUserByEmail,
+} from "./collaborator";
