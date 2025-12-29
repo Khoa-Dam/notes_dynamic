@@ -48,15 +48,21 @@ const BotMessage = ({ content }: { content: string }) => {
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       components={{
-        p: ({ node, ...props }) => <p className="text-sm mb-2 last:mb-0" {...props} />,
-        ol: ({ node, ...props }) => <ol className="text-sm list-decimal list-inside" {...props} />,
-        ul: ({ node, ...props }) => <ul className="text-sm list-disc list-inside" {...props} />,
+        p: ({ node, ...props }) => (
+          <p className='text-sm mb-2 last:mb-0' {...props} />
+        ),
+        ol: ({ node, ...props }) => (
+          <ol className='text-sm list-decimal list-inside' {...props} />
+        ),
+        ul: ({ node, ...props }) => (
+          <ul className='text-sm list-disc list-inside' {...props} />
+        )
       }}
     >
       {content}
     </ReactMarkdown>
-  );
-};
+  )
+}
 
 export function Chatbot() {
   const [isOpen, setIsOpen] = useState(false)
@@ -153,7 +159,7 @@ export function Chatbot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className='absolute bottom-20 left-100 right-59 z-50'
+            className='absolute bottom-20 left-100 right-59 z-[99999]'
           >
             <Card className='w-100 h-120 rounded-lg shadow-xl flex flex-col'>
               <CardHeader className='flex flex-row items-center justify-between pb-2'>

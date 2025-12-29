@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import type { ThemeProviderProps } from "next-themes";
 
 import { TooltipProvider } from "./ui/tooltip";
+import { QuickCreateProvider } from "./providers/quick-create-provider";
 
 export const Providers: React.FCC<{
   theme?: ThemeProviderProps;
@@ -20,7 +21,10 @@ export const Providers: React.FCC<{
       {...theme}
     >
       <SessionProvider basePath="/api/auth">
-        <TooltipProvider>{children}</TooltipProvider>
+        <TooltipProvider>
+          {children}
+          <QuickCreateProvider />
+        </TooltipProvider>
       </SessionProvider>
     </ThemeProvider>
   );

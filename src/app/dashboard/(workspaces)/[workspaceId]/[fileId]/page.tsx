@@ -65,7 +65,7 @@ export default function FilePage({ params }: PageProps) {
         setFile(data)
         setTitle(data.title)
         setContent(data.data ?? '')
-        setIconId(data.iconId)
+        setIconId(data.iconId || '💗')
         setBannerUrl(data.bannerUrl)
       })
       .catch(() => notFound())
@@ -268,9 +268,9 @@ export default function FilePage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className='chatbot-wrapper'>
+      {/* <div className='chatbot-wrapper'>
         <Chatbot />
-      </div>
+      </div> */}
     </div>
   )
 }

@@ -10,9 +10,9 @@ import { Button } from '@/components/ui/button'
 import { EmojiPicker } from './emoji-picker'
 
 interface ToolbarProps {
-  initialData: File
-  title: string
-  iconId: string
+  initialData?: File
+  title?: string
+  iconId?: string
   onTitleChange: (title: string) => void
   onIconChange: (icon: string) => void
   preview?: boolean
@@ -82,9 +82,7 @@ export const Toolbar = memo(
             </Button>
           </div>
         )}
-        {!!iconId && preview && (
-          <p className='text-6xl pt-6'>{iconId}</p>
-        )}
+        {!!iconId && preview && <p className='text-6xl pt-6'>{iconId}</p>}
         <div className='opacity-0 group-hover:opacity-100 flex items-center gap-x-1 py-4'>
           {!iconId && !preview && (
             <EmojiPicker getValue={onIconSelect}>
@@ -98,9 +96,9 @@ export const Toolbar = memo(
               </Button>
             </EmojiPicker>
           )}
-          {!initialData.bannerUrl && !preview && (
+          {initialData && !initialData.bannerUrl && !preview && (
             <Button
-              onClick={() => coverImage.onOpen(initialData.id)}
+              onClick={() => coverImage.onOpen(initialData?.id || '')}
               className='text-muted-foreground text-xs'
               variant='outline'
               size='sm'
