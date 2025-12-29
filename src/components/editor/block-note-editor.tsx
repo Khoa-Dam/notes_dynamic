@@ -1,11 +1,11 @@
-"use client";
+'use client'
 
-import React from "react";
-import { useTheme } from "next-themes";
-import dynamic from "next/dynamic";
+import React from 'react'
+import { useTheme } from 'next-themes'
+import dynamic from 'next/dynamic'
 
 const BlockNoteViewWrapper = dynamic(
-  () => import("./block-note-view-wrapper"),
+  () => import('./block-note-view-wrapper'),
   {
     ssr: false,
     loading: () => (
@@ -14,21 +14,25 @@ const BlockNoteViewWrapper = dynamic(
       </div>
     ),
   }
-);
+)
 
 interface BlockNoteEditorProps {
-  onChange: (content: string) => void;
-  initialContent?: string;
-  editable?: boolean;
+  onChange: (content: string) => void
+  initialContent?: string
+  editable?: boolean
+  userName: string    // Thêm vào
+  userColor: string   // Thêm vào
 }
 
 export function BlockNoteEditor({
   onChange,
   initialContent,
   editable = true,
+  userName,
+  userColor,
 }: BlockNoteEditorProps) {
-  const { resolvedTheme } = useTheme();
-  const theme = resolvedTheme === "dark" ? "dark" : "light";
+  const { resolvedTheme } = useTheme()
+  const theme = resolvedTheme === 'dark' ? 'dark' : 'light'
 
   return (
     <BlockNoteViewWrapper
@@ -36,6 +40,8 @@ export function BlockNoteEditor({
       onChange={onChange}
       editable={editable}
       theme={theme}
+      userName={userName}
+      userColor={userColor}
     />
-  );
+  )
 }

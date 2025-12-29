@@ -106,7 +106,14 @@ export const env = createEnv({
       .string()
       .min(1, { message: 'Cloudinary API Secret is required' }),
 
-    GOOGLE_API_KEY: z.string().min(1, { message: 'OpenAI API Key is required' })
+    GOOGLE_API_KEY: z
+      .string()
+      .min(1, { message: 'OpenAI API Key is required' })
+      .min(1, { message: 'Cloudinary API Secret is required' })
+
+    // NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY: z
+    //   .string()
+    //   .min(1, { message: 'Liveblock api' })
   },
 
   /**

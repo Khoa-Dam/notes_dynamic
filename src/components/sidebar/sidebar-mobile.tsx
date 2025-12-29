@@ -54,6 +54,10 @@ export function SidebarMobile() {
         <Menu className="mr-2 size-5" />
       </SheetTrigger>
       <SheetContent side="left" className="w-[300px] p-0">
+        <SheetHeader className="sr-only">
+          <SheetTitle>Navigation Menu</SheetTitle>
+          <SheetDescription>Mobile navigation sidebar</SheetDescription>
+        </SheetHeader>
         <div className="flex h-full flex-col gap-2">
           {/* Header */}
           <div className="flex items-center gap-2 border-b p-4">
