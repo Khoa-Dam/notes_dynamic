@@ -128,7 +128,7 @@ export default function Stopwatch() {
       draggable
       onDragEnd={handleDrag}
       style={{ left: position.x, top: position.y, right: 0 }}
-      className={`absolute p-0 transition-all gap-0 duration-300 z-50 ${
+      className={`absolute p-0 transition-all gap-0 duration-300 z-[100] ${
         isCollapsed ? 'w-48' : 'w-72'
       }`}
     >

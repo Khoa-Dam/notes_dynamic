@@ -137,9 +137,9 @@ export default function FloatingYoutubePlayer() {
             top: position.y,
             right: 20,
             bottom: 20,
-            zIndex: 10
+            zIndex: 10 // This will be overridden by className, but keep for clarity if style is for other purposes
           }}
-          className='absolute z-50 h-20 w-20 rounded-xl overflow-hidden cursor-pointer shadow-lg'
+          className='absolute  z-[99999]  h-20 w-20 rounded-xl overflow-hidden cursor-pointer shadow-lg'
         >
           <img
             src={thumbnail}
@@ -173,7 +173,7 @@ export default function FloatingYoutubePlayer() {
             bottom: 20,
             zIndex: 10
           }}
-          className='absolute z-50 w-72 overflow-hidden'
+          className='absolute z-[99999] w-72 overflow-hidden'
         >
           <div
             className='absolute inset-0 bg-cover bg-center scale-110'

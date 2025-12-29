@@ -96,6 +96,13 @@ export function Folders() {
   const [sortBy, setSortBy] = useState<'none' | 'name' | 'createdAt'>('none')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length > maxLength) {
+      return text.substring(0, maxLength) + '...'
+    }
+    return text
+  }
+
   const getSortedFolders = (
     folders: Folder[],
     sortBy: 'none' | 'name' | 'createdAt',
@@ -605,7 +612,9 @@ export function Folders() {
                                   <FolderIcon className='size-6 shrink-0' />
                                 )}
                               </span>
-                              <span className='text-xl'>{title}</span>
+                              <span className='text-xl'>
+                                {truncateText(title, 25)}
+                              </span>
 
                               <div className='ml-auto'>
                                 <ChevronDown className=' size-6 shrink-0 text-muted-foreground transition-transform duration-200 group-hover/trigger:visible group-data-[state=open]/trigger:visible group-data-[state=open]/trigger:rotate-180' />
@@ -682,7 +691,7 @@ export function Folders() {
                             >
                               <Link
                                 href={`/dashboard/${workspaceId}/${id}`}
-                                className='flex text-xl flex w-full items-center gap-2'
+                                className='flex text-xl w-full items-center gap-2'
                               >
                                 <span className='mr-2 ml-5 size-6 flex items-center text-2xl shrink-0'>
                                   {iconId ? (
@@ -691,7 +700,7 @@ export function Folders() {
                                     <FileIcon className='size-6' />
                                   )}
                                 </span>
-                                {title}
+                                {truncateText(title, 25)}
                               </Link>
 
                               <AlertDialog>

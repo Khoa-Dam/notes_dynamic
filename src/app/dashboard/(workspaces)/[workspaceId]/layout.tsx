@@ -45,8 +45,6 @@ export const WorkspaceLayout: React.FCC<{
         defaultLayout={defaultLayout as number[]}
         defaultCollapsed={defaultCollapsed as boolean}
       >
-        <Stopwatch />
-        <FloatingYoutubePlayer />
         {children}
       </ResizableLayout>
     </AppStateProvider>

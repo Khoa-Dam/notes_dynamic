@@ -176,7 +176,8 @@ export function FoldersCollapsed() {
       iconId: selectedEmoji || '📁',
       bannerUrl: '',
       createdAt: new Date().toISOString(),
-      workspaceId: pathname.split('/')[2]
+      workspaceId: pathname.split('/')[2],
+      inTrash: false
     }
 
     // Add folder optimistically

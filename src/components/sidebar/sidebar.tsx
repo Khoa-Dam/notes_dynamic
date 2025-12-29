@@ -1,5 +1,5 @@
 import React from 'react'
-import { LayoutGrid, Search, Sparkles, Trash2, User2 } from 'lucide-react'
+import { LayoutGrid, Plus, Search, Sparkles, Trash2, User2 } from 'lucide-react'
 import Link from 'next/link'
 
 import type { LucideIcon } from 'lucide-react'
@@ -7,6 +7,7 @@ import type { LucideIcon } from 'lucide-react'
 import { siteConfig } from '@/config/site'
 import { useAppState } from '@/hooks/use-app-state'
 import { useSearch } from '@/hooks/use-search'
+import { useQuickCreate } from '@/hooks/use-quick-create'
 import { cn } from '@/lib/utils'
 import { Logo } from '../icons'
 import { SignOut } from '../sign-out'
@@ -33,13 +34,20 @@ type NavItem = {
   icon: LucideIcon
   content?: React.FC
   href?: string
+  onClick?: () => void
 }
 
 const navItems: NavItem[] = [
   {
+    title: 'Quick Create',
+    description: 'Create a new note quickly',
+    icon: Plus,
+    href: '/dashboard'
+  },
+  {
     title: 'Search',
     description: 'Find your file',
-    icon: Search,
+    icon: Search
   },
   {
     title: 'Dnote Chat',
@@ -64,6 +72,17 @@ const navItems: NavItem[] = [
 export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
   const { user } = useAppState()
   const { onOpen } = useSearch()
+  const { onOpen: onOpenQuickCreate } = useQuickCreate()
+
+  const navItemsWithOnClick: NavItem[] = navItems.map((item) => {
+    if (item.title === 'Search') {
+      return { ...item, onClick: onOpen }
+    }
+    if (item.title === 'Quick Create') {
+      return { ...item, onClick: onOpenQuickCreate }
+    }
+    return item
+  })
 
   return (
     <aside
@@ -97,35 +116,45 @@ export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
         </div>
 
         <nav className='flex flex-col items-center justify-center gap-1 px-4'>
-          {navItems.map(
-            ({ title, description, icon: Icon, content: Content, href }) => {
-              // Special handler for Search button
-              if (title === 'Search') {
-                const searchButton = (
+          {navItemsWithOnClick.map(
+            ({
+              title,
+              description,
+              icon: Icon,
+              content: Content,
+              href,
+              onClick
+            }) => {
+              if (onClick) {
+                const button = (
                   <Button
                     variant='ghost'
                     size={isCollapsed ? 'icon' : 'lg'}
-                    className={cn(!isCollapsed && 'w-full justify-start text-xl')}
-                    onClick={onOpen}
+                    className={cn(
+                      !isCollapsed && 'w-full justify-start text-xl'
+                    )}
+                    onClick={onClick}
                   >
                     <Icon
-                      className={cn(isCollapsed ? 'size-8' : 'mr-2 size-8 shrink-0')}
+                      className={cn(
+                        isCollapsed ? 'size-8' : 'mr-2 size-8 shrink-0'
+                      )}
                     />
                     {!isCollapsed && title}
                   </Button>
-                );
+                )
 
                 if (isCollapsed) {
                   return (
                     <Tooltip key={title} delayDuration={0}>
-                      <TooltipTrigger asChild>{searchButton}</TooltipTrigger>
+                      <TooltipTrigger asChild>{button}</TooltipTrigger>
                       <TooltipContent side='right'>{title}</TooltipContent>
                     </Tooltip>
-                  );
+                  )
                 }
-                return <React.Fragment key={title}>{searchButton}</React.Fragment>;
+                return <React.Fragment key={title}>{button}</React.Fragment>
               }
-              
+
               if (href) {
                 const button = (
                   <Button
