@@ -9,6 +9,10 @@ export type AppState = {
   workspaceId: string | null
   files: File[]
   folders: Folder[]
+  isSplitView: boolean
+  focusedPanel: 'left' | 'right'
+  leftPanelFileId: string | null
+  rightPanelFileId: string | null
 }
 
 export type AppAction = {
@@ -20,6 +24,11 @@ export type AppAction = {
   addFolder: (folder: Folder) => void
   updateFolder: (folder: Folder) => void
   deleteFolder: (folderId: string) => void
+
+  setSplitView: (isSplit: boolean) => void
+  setFocusedPanel: (panel: 'left' | 'right') => void
+  setPanelFile: (panel: 'left' | 'right', fileId: string) => void
+  closePanel: (panel: 'left' | 'right') => void
 }
 
 export const store = proxy<AppState & AppAction>({
@@ -27,6 +36,10 @@ export const store = proxy<AppState & AppAction>({
   workspaceId: null,
   files: [],
   folders: [],
+  isSplitView: false,
+  focusedPanel: 'left',
+  leftPanelFileId: null,
+  rightPanelFileId: null,
 
   addFile(file) {
     store.files.push(file)
@@ -51,6 +64,45 @@ export const store = proxy<AppState & AppAction>({
   },
   deleteFolder(id) {
     store.folders = store.folders.filter((f) => f.id !== id)
+  },
+
+  setSplitView(isSplit) {
+    store.isSplitView = isSplit
+    if (!isSplit) {
+      // If we're turning off split view, keep the focused panel's file
+      if (store.focusedPanel === 'right') {
+        store.leftPanelFileId = store.rightPanelFileId
+      }
+      store.rightPanelFileId = null
+      store.focusedPanel = 'left'
+    }
+  },
+  setFocusedPanel(panel) {
+    store.focusedPanel = panel
+  },
+  setPanelFile(panel, fileId) {
+    if (panel === 'left') {
+      store.leftPanelFileId = fileId
+    } else {
+      store.rightPanelFileId = fileId
+      // Entering split view by opening a second file
+      if (store.leftPanelFileId) {
+        store.isSplitView = true
+      }
+    }
+  },
+  closePanel(panel) {
+    if (panel === 'left') {
+      store.leftPanelFileId = store.rightPanelFileId
+      store.rightPanelFileId = null
+    } else {
+      store.rightPanelFileId = null
+    }
+    // If both panels are now closed, exit split view
+    if (!store.leftPanelFileId && !store.rightPanelFileId) {
+      store.isSplitView = false
+    }
+    store.focusedPanel = 'left'
   }
 })
 

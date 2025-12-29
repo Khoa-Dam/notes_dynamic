@@ -11,6 +11,8 @@ import {
   FolderIcon,
   FolderOpen,
   FolderX,
+  ListFilter,
+  PenSquare,
   Plus,
   Trash,
   Trash2,
@@ -56,6 +58,14 @@ import {
   AlertDialogTrigger
 } from '../ui/alert-dialog'
 import { Button, buttonVariants } from '../ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '../ui/dropdown-menu'
 import { Input } from '../ui/input'
 import { Kbd } from '../ui/kbd'
 import { ScrollArea, ScrollBar } from '../ui/scroll-area'
@@ -73,7 +83,12 @@ export function Folders() {
     updateFile,
     addFolder,
     deleteFolder,
-    updateFolder
+    updateFolder,
+    isSplitView,
+    focusedPanel,
+    setPanelFile,
+    setSplitView,
+    setFocusedPanel
   } = useAppState()
 
   const files = stateFiles.filter((file) => !file.inTrash)
@@ -85,6 +100,62 @@ export function Folders() {
   const [selectedEmoji, setSelectedEmoji] = useState('')
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
+
+  const [sortCriteria, setSortCriteria] = useState<'name' | 'createdAt'>('createdAt')
+  const [sortDirection, setSortDirection] = useState<'desc' | 'asc'>('desc')
+
+  const getSortedFolders = (
+    folders: Folder[],
+    criteria: 'name' | 'createdAt',
+    direction: 'desc' | 'asc'
+  ) => {
+    return [...folders].sort((a, b) => {
+      if (criteria === 'name') {
+        const nameA = a.title.toLowerCase()
+        const nameB = b.title.toLowerCase()
+        if (nameA < nameB) return direction === 'asc' ? -1 : 1
+        if (nameA > nameB) return direction === 'asc' ? 1 : -1
+        return 0
+      } else if (criteria === 'createdAt') {
+        const dateA = new Date(a.createdAt!).getTime()
+        const dateB = new Date(b.createdAt!).getTime()
+        if (dateA < dateB) return direction === 'asc' ? -1 : 1
+        if (dateA > dateB) return direction === 'asc' ? 1 : -1
+        return 0
+      }
+      return 0
+    })
+  }
+
+  const sortedFolders = getSortedFolders(folders, sortCriteria, sortDirection)
+
+  const handleFileOpen = (
+    e: React.MouseEvent<HTMLDivElement>,
+    fileId: string
+  ) => {
+    e.preventDefault()
+    const workspaceId = pathname.split('/')[2]
+    const openInOtherPanel = e.ctrlKey || e.metaKey
+
+    if (openInOtherPanel) {
+      if (isSplitView) {
+        const targetPanel = focusedPanel === 'left' ? 'right' : 'left'
+        setPanelFile(targetPanel, fileId)
+        setFocusedPanel(targetPanel)
+      } else {
+        // If not in split view, open the current file in the left panel and the new one in the right
+        setPanelFile('right', fileId)
+        setSplitView(true)
+        setFocusedPanel('right')
+      }
+    } else {
+      // Normal click opens in the focused panel
+      setPanelFile(focusedPanel, fileId)
+    }
+    // Update URL to the primary file, which is always the one in the focused panel
+    router.push(`/dashboard/${workspaceId}/${fileId}`)
+  }
+
 
   // Helper function to create initial content with icon and header
   function createInitialContent(icon: string = '📄'): string {
@@ -132,17 +203,23 @@ export function Folders() {
     setIsCreatingFolder((prev) => !prev)
   }
 
-  async function createFileToggle(folderId: string) {
+  async function createFileToggle(
+    folderId: string,
+    fileType: 'note' | 'excalidraw' = 'note'
+  ) {
     const tempId = uuid()
-    const initialContent = createInitialContent()
+    const isNote = fileType === 'note'
+
     const newFile: File = {
       id: tempId,
       title: 'Untitled',
-      iconId: '📄',
+      iconId: isNote ? '📄' : '🎨',
       folderId,
       workspaceId: pathname.split('/')[2],
-      data: initialContent,
-      inTrash: false
+      data: isNote ? createInitialContent() : '',
+      inTrash: false,
+      type: fileType,
+      createdAt: new Date().toISOString() // Add createdAt for consistency
     }
 
     // Add file optimistically
@@ -184,7 +261,8 @@ export function Folders() {
       iconId: selectedEmoji,
       workspaceId: pathname.split('/')[2],
       data: null,
-      inTrash: false
+      inTrash: false,
+      createdAt: new Date().toISOString() // Add createdAt for consistency
     }
 
     // Add folder optimistically
@@ -348,30 +426,67 @@ export function Folders() {
     <>
       <div className='flex items-center justify-between px-4'>
         <p className='text-sm font-medium text-muted-foreground'>Folders</p>
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <Button
-              size='icon'
-              variant='ghost'
-              onClick={createFolderToggle}
-              className='size-7 text-muted-foreground'
-            >
-              {isCreatingFolder ? (
-                <X className='size-6 duration-300 animate-in spin-in-90' />
-              ) : (
-                <Plus className='size-[18px] duration-300 animate-out spin-out-90' />
-              )}
-            </Button>
-          </TooltipTrigger>
+        <div className='flex items-center gap-1'>
+          <DropdownMenu>
+            <Tooltip delayDuration={0}>
+              <DropdownMenuTrigger asChild>
+                <TooltipTrigger asChild>
+                  <Button size='icon' variant='ghost' className='size-7 text-muted-foreground'>
+                    <ListFilter className='size-[18px]' />
+                  </Button>
+                </TooltipTrigger>
+              </DropdownMenuTrigger>
+              <TooltipContent>Sort Folders</TooltipContent>
+            </Tooltip>
 
-          <TooltipContent>
-            {isCreatingFolder ? 'Cancel' : 'Create New folder'}
-          </TooltipContent>
-        </Tooltip>
+            <DropdownMenuContent className='w-48'>
+              <DropdownMenuRadioGroup value={`${sortCriteria}-${sortDirection}`} onValueChange={(value) => {
+                const [criteria, direction] = value.split('-') as ['name' | 'createdAt', 'asc' | 'desc'];
+                setSortCriteria(criteria);
+                setSortDirection(direction);
+              }}>
+                <DropdownMenuRadioItem value='name-asc'>
+                  Sort by Name (A-Z)
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value='name-desc'>
+                  Sort by Name (Z-A)
+                </DropdownMenuRadioItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioItem value='createdAt-desc'>
+                  Sort by Created Date (Newest First)
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value='createdAt-asc'>
+                  Sort by Created Date (Oldest First)
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <Button
+                size='icon'
+                variant='ghost'
+                onClick={createFolderToggle}
+                className='size-7 text-muted-foreground'
+              >
+                {isCreatingFolder ? (
+                  <X className='size-6 duration-300 animate-in spin-in-90' />
+                ) : (
+                  <Plus className='size-[18px] duration-300 animate-out spin-out-90' />
+                )}
+              </Button>
+            </TooltipTrigger>
+
+            <TooltipContent>
+              {isCreatingFolder ? 'Cancel' : 'Create New folder'}
+            </TooltipContent>
+          </Tooltip>
+        </div>
       </div>
 
       <div className='-mb-2 flex grow flex-col gap-1 overflow-hidden'>
-        {isCreatingFolder || folders.length ? (
+        {isCreatingFolder || sortedFolders.length ? (
           <ScrollArea>
             <Accordion
               type='multiple'
@@ -415,7 +530,7 @@ export function Folders() {
                 </form>
               )}
 
-              {folders.map(({ id, title, iconId }) => {
+              {sortedFolders.map(({ id, title, iconId, createdAt }) => {
                 const folderFiles = files.filter((f) => f.folderId === id)
 
                 return (
@@ -501,6 +616,11 @@ export function Folders() {
                                 )}
                               </span>
                               <span className='text-xl'>{title}</span>
+                              {sortCriteria === 'createdAt' && createdAt && (
+                                <span className='ml-2 text-sm text-muted-foreground'>
+                                  ({new Date(createdAt).toLocaleDateString()})
+                                </span>
+                              )}
 
                               <div className='ml-auto'>
                                 <ChevronDown className=' size-6 shrink-0 text-muted-foreground transition-transform duration-200 group-hover/trigger:visible group-data-[state=open]/trigger:visible group-data-[state=open]/trigger:rotate-180' />
@@ -512,7 +632,7 @@ export function Folders() {
 
                       <ContextMenuContent className='w-56'>
                         <ContextMenuItem
-                          onClick={() => createFileToggle(id!)}
+                          onClick={() => createFileToggle(id!, 'note')}
                           className='cursor-pointer'
                         >
                           <FileIcon className='mr-2 size-6 shrink-0' />
@@ -520,6 +640,14 @@ export function Folders() {
                           <Kbd className='ml-auto'>
                             {isAppleDevice() ? '⌘' : 'Ctrl'}+N
                           </Kbd>
+                        </ContextMenuItem>
+
+                        <ContextMenuItem
+                          onClick={() => createFileToggle(id!, 'excalidraw')}
+                          className='cursor-pointer'
+                        >
+                          <PenSquare className='mr-2 size-6 shrink-0' />
+                          New Drawing
                         </ContextMenuItem>
 
                         <ContextMenuItem
@@ -566,79 +694,85 @@ export function Folders() {
 
                     <AccordionContent className='pb-2 pl-2 pt-1'>
                       {folderFiles.length > 0 ? (
-                        folderFiles.map(
-                          ({ id, title, iconId, workspaceId }) => (
-                            <div
-                              key={id}
-                              className={cn(
-                                'group w-full justify-between',
-                                buttonVariants({ size: 'lg', variant: 'ghost' })
-                              )}
-                            >
-                              <Link
-                                href={`/dashboard/${workspaceId}/${id}`}
-                                className='flex text-xl flex w-full items-center gap-2'
+                          folderFiles.map(
+                            ({ id, title, iconId, workspaceId }) => (
+                              <div
+                                key={id}
+                                onClick={(e) => handleFileOpen(e, id!)}
+                                className={cn(
+                                  'group w-full justify-between cursor-pointer',
+                                  buttonVariants({
+                                    size: 'lg',
+                                    variant: 'ghost'
+                                  })
+                                )}
                               >
-                                <span className='mr-2 ml-5 size-6 flex items-center text-2xl shrink-0'>
-                                  {iconId ? (
-                                    iconId
-                                  ) : (
-                                    <FileIcon className='size-6' />
-                                  )}
-                                </span>
-                                {title}
-                              </Link>
+                                <div className='flex text-xl w-full items-center gap-2'>
+                                  <span className='mr-2 ml-5 size-6 flex items-center text-2xl shrink-0'>
+                                    {iconId ? (
+                                      iconId
+                                    ) : (
+                                      <FileIcon className='size-6' />
+                                    )}
+                                  </span>
+                                  {title}
+                                </div>
 
-                              <AlertDialog>
-                                <Tooltip delayDuration={0}>
-                                  <AlertDialogTrigger asChild>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        variant='ghost'
-                                        className='size-7 p-0 text-muted-foreground hover:text-red-500'
+                                <AlertDialog>
+                                  <Tooltip delayDuration={0}>
+                                    <AlertDialogTrigger asChild>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant='ghost'
+                                          className='size-7 p-0 text-muted-foreground hover:text-red-500'
+                                          onClick={(e) => {
+                                            e.stopPropagation() // Prevent opening the file
+                                          }}
+                                        >
+                                          <Trash className='size-6' />
+                                        </Button>
+                                      </TooltipTrigger>
+                                    </AlertDialogTrigger>
+                                    <TooltipContent>
+                                      Delete file
+                                    </TooltipContent>
+                                  </Tooltip>
+
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        Are you absolutely sure?
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This action cannot be undone. This will
+                                        permanently delete the file.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => moveFileToTrash(id!)}
+                                        className='bg-destructive/10 text-destructive hover:bg-destructive/15'
                                       >
-                                        <Trash className='size-6' />
-                                      </Button>
-                                    </TooltipTrigger>
-                                  </AlertDialogTrigger>
-                                  <TooltipContent>Delete file</TooltipContent>
-                                </Tooltip>
-
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                      Are you absolutely sure?
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      This action cannot be undone. This will
-                                      permanently delete the file.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>
-                                      Cancel
-                                    </AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => moveFileToTrash(id!)}
-                                      className='bg-destructive/10 text-destructive hover:bg-destructive/15'
-                                    >
-                                      Move to trash
-                                    </AlertDialogAction>
-                                    <AlertDialogAction
-                                      onClick={() => deleteFileHandler(id!)}
-                                      className={buttonVariants({
-                                        variant: 'destructive'
-                                      })}
-                                    >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
+                                        Move to trash
+                                      </AlertDialogAction>
+                                      <AlertDialogAction
+                                        onClick={() => deleteFileHandler(id!)}
+                                        className={buttonVariants({
+                                          variant: 'destructive'
+                                        })}
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            )
                           )
-                        )
                       ) : (
                         <div className='flex flex-col items-center justify-center gap-2 rounded-md border border-dashed p-4 text-muted-foreground'>
                           <FileX size={20} />

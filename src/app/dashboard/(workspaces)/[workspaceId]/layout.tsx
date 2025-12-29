@@ -9,6 +9,7 @@ import { ResizableLayout } from '../components/resizable-layout'
 import Stopwatch from '@/components/stop-watch'
 import FloatingYoutubePlayer from '@/components/floating-youtube-player'
 import { WorkspaceIdManager } from '@/components/workspace/workspace-id-manager'
+import { Chatbot } from '@/components/chatbot'
 // import { Chatbot } from '@/components/chatbot'
 
 export const WorkspaceLayout: React.FCC<{
@@ -47,6 +48,7 @@ export const WorkspaceLayout: React.FCC<{
       >
         <Stopwatch />
         <FloatingYoutubePlayer />
+        <Chatbot />
         {children}
       </ResizableLayout>
     </AppStateProvider>

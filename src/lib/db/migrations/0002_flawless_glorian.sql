@@ -1,0 +1,1 @@
+ALTER TABLE "dnotes_files" ADD COLUMN "type" text DEFAULT 'note' NOT NULL;

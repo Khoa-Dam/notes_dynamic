@@ -43,6 +43,7 @@ export const files = createTable('files', {
   id: uuid('id').defaultRandom().primaryKey().notNull(),
   title: text('title').notNull(),
   iconId: text('icon_id').notNull(),
+  type: text('type').notNull().default('note'),
   data: text('data'),
   bannerUrl: text('banner_url'),
   workspaceId: uuid('workspace_id').references(() => workspaces.id, {
