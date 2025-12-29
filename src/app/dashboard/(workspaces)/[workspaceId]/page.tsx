@@ -1,4 +1,3 @@
-import Stopwatch from '@/components/stop-watch'
 import { WorkspaceContent } from '@/components/workspace/workspace-content'
 import { WorkspaceHeader } from '@/components/workspace/workspace-header'
 import { getWorkspaceById } from '@/lib/db/queries'

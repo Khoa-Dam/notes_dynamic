@@ -6,16 +6,8 @@ import { AppStateProvider } from '@/components/app-state-provider'
 import { getCurrentUser } from '@/lib/auth'
 import { getFiles, getFolders } from '@/lib/db/queries'
 import { ResizableLayout } from '../components/resizable-layout'
-import Stopwatch from '@/components/stop-watch'
-import FloatingYoutubePlayer from '@/components/floating-youtube-player'
-import { WorkspaceIdManager } from '@/components/workspace/workspace-id-manager'
-// import { Chatbot } from '@/components/chatbot'
 
-export const WorkspaceLayout: React.FCC<{
-  params: Promise<{ workspaceId: string }>
-}> = async ({ params, children }) => {
-  const { workspaceId } = await params
-
+export const DnoteChatLayout: React.FCC = async ({ children }) => {
   const user = await getCurrentUser()
 
   if (!user) redirect('/login')
@@ -28,29 +20,33 @@ export const WorkspaceLayout: React.FCC<{
   const defaultLayout = layout ? JSON.parse(layout.value) : undefined
   const defaultCollapsed = collapsed ? JSON.parse(collapsed.value) : undefined
 
-  const [files, folders] = await Promise.all([
-    getFiles(workspaceId),
-    getFolders(workspaceId)
-  ])
+  const workspaceId = cookieStore.get('last-visited-workspace-id')?.value
+
+  let files = []
+  let folders = []
+
+  if (workspaceId) {
+    ;[files, folders] = await Promise.all([
+      getFiles(workspaceId).then((res) => res || []),
+      getFolders(workspaceId).then((res) => res || [])
+    ])
+  }
 
   return (
     <AppStateProvider
       user={user}
-      files={files!}
-      folders={folders!}
-      workspaceId={workspaceId}
+      files={files}
+      folders={folders}
+      workspaceId={workspaceId || null}
     >
-      <WorkspaceIdManager workspaceId={workspaceId} />
       <ResizableLayout
         defaultLayout={defaultLayout as number[]}
         defaultCollapsed={defaultCollapsed as boolean}
       >
-        <Stopwatch />
-        <FloatingYoutubePlayer />
         {children}
       </ResizableLayout>
     </AppStateProvider>
   )
 }
 
-export default WorkspaceLayout
+export default DnoteChatLayout

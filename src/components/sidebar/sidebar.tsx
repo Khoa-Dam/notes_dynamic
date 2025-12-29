@@ -1,15 +1,18 @@
 import React from 'react'
-import { LayoutGrid, Search, Trash2, User2 } from 'lucide-react'
+import { LayoutGrid, Search, Sparkles, Trash2, User2 } from 'lucide-react'
+import Link from 'next/link'
 
 import type { LucideIcon } from 'lucide-react'
 
 import { siteConfig } from '@/config/site'
 import { useAppState } from '@/hooks/use-app-state'
+import { useSearch } from '@/hooks/use-search'
 import { cn } from '@/lib/utils'
 import { Logo } from '../icons'
 import { SignOut } from '../sign-out'
 import { Trash } from '../trash'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+import { Button } from '../ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { Separator } from '../ui/separator'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
@@ -28,16 +31,22 @@ type NavItem = {
   title: string
   description: string
   icon: LucideIcon
-  content: React.FC
+  content?: React.FC
+  href?: string
 }
 
 const navItems: NavItem[] = [
-  // {
-  //   title: 'Search',
-  //   description: 'Find your file',
-  //   icon: Search,
-  //   content: SearchCommand
-  // },
+  {
+    title: 'Search',
+    description: 'Find your file',
+    icon: Search,
+  },
+  {
+    title: 'Dnote Chat',
+    description: 'Chat with Dnote AI',
+    icon: Sparkles,
+    href: '/dashboard/dnote-chat'
+  },
   {
     title: 'My Workspaces',
     description: 'Manage your workspaces',
@@ -54,6 +63,7 @@ const navItems: NavItem[] = [
 
 export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
   const { user } = useAppState()
+  const { onOpen } = useSearch()
 
   return (
     <aside
@@ -63,6 +73,7 @@ export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
       )}
       {...props}
     >
+      <SearchCommand />
       <div
         className={cn(
           'sticky inset-y-0 flex h-screen flex-col gap-2',
@@ -86,31 +97,93 @@ export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
         </div>
 
         <nav className='flex flex-col items-center justify-center gap-1 px-4'>
-          {navItems.map(({ title, description, icon, content: Content }) =>
-            isCollapsed ? (
-              <Tooltip key={title} delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <NavDialog
-                    title={title}
-                    icon={icon}
-                    description={description}
-                    isCollapsed
+          {navItems.map(
+            ({ title, description, icon: Icon, content: Content, href }) => {
+              // Special handler for Search button
+              if (title === 'Search') {
+                const searchButton = (
+                  <Button
+                    variant='ghost'
+                    size={isCollapsed ? 'icon' : 'lg'}
+                    className={cn(!isCollapsed && 'w-full justify-start text-xl')}
+                    onClick={onOpen}
                   >
-                    <Content />
-                  </NavDialog>
-                </TooltipTrigger>
-                <TooltipContent side='right'>{title}</TooltipContent>
-              </Tooltip>
-            ) : (
-              <NavDialog
-                key={title}
-                title={title}
-                icon={icon}
-                description={description}
-              >
-                <Content />
-              </NavDialog>
-            )
+                    <Icon
+                      className={cn(isCollapsed ? 'size-8' : 'mr-2 size-8 shrink-0')}
+                    />
+                    {!isCollapsed && title}
+                  </Button>
+                );
+
+                if (isCollapsed) {
+                  return (
+                    <Tooltip key={title} delayDuration={0}>
+                      <TooltipTrigger asChild>{searchButton}</TooltipTrigger>
+                      <TooltipContent side='right'>{title}</TooltipContent>
+                    </Tooltip>
+                  );
+                }
+                return <React.Fragment key={title}>{searchButton}</React.Fragment>;
+              }
+              
+              if (href) {
+                const button = (
+                  <Button
+                    variant='ghost'
+                    size={isCollapsed ? 'icon' : 'lg'}
+                    className={cn(
+                      !isCollapsed && 'w-full justify-start text-xl'
+                    )}
+                    asChild
+                  >
+                    <Link href={href}>
+                      <Icon
+                        className={cn(
+                          isCollapsed ? 'size-8' : 'mr-2 size-8 shrink-0'
+                        )}
+                      />
+                      {!isCollapsed && title}
+                    </Link>
+                  </Button>
+                )
+
+                if (isCollapsed) {
+                  return (
+                    <Tooltip key={title} delayDuration={0}>
+                      <TooltipTrigger asChild>{button}</TooltipTrigger>
+                      <TooltipContent side='right'>{title}</TooltipContent>
+                    </Tooltip>
+                  )
+                }
+
+                return <React.Fragment key={title}>{button}</React.Fragment>
+              }
+
+              return isCollapsed ? (
+                <Tooltip key={title} delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <NavDialog
+                      title={title}
+                      icon={Icon}
+                      description={description}
+                      isCollapsed
+                    >
+                      {Content && <Content />}
+                    </NavDialog>
+                  </TooltipTrigger>
+                  <TooltipContent side='right'>{title}</TooltipContent>
+                </Tooltip>
+              ) : (
+                <NavDialog
+                  key={title}
+                  title={title}
+                  icon={Icon}
+                  description={description}
+                >
+                  {Content && <Content />}
+                </NavDialog>
+              )
+            }
           )}
         </nav>
 
@@ -176,7 +249,7 @@ export function Sidebar({ isCollapsed, className, ...props }: SidebarProps) {
 
               <div className='w-full font-medium'>
                 <p className='line-clamp-1 text-sm'>
-                  {user?.name ?? 'Update  profile'}
+                  {user?.name ?? user?.email ?? 'Update  profile'}
                 </p>
               </div>
 

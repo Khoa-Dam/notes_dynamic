@@ -28,6 +28,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { SidebarMobile } from '@/components/sidebar/sidebar-mobile'
 import { Button } from '@/components/ui/button'
 import { Publish } from '@/components/publish'
+import { Chatbot } from '@/components/chatbot'
 
 interface PageProps {
   params: Promise<{
@@ -151,7 +152,7 @@ export default function FilePage({ params }: PageProps) {
 
   return (
     <div className='pb-40'>
-      <div className='flex items-center justify-between border-b p-4'>
+      <div className='flex relative items-center justify-between border-b p-4'>
         <div className='flex items-center gap-4 flex-1'>
           <div className='lg:hidden'>
             <SidebarMobile />
@@ -205,6 +206,8 @@ export default function FilePage({ params }: PageProps) {
           content={content}
           onContentChange={onContentChange}
         />
+
+        <Chatbot />
       </div>
     </div>
   )

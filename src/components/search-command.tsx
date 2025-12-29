@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { File } from 'lucide-react'
-// import { useQuery } from "convex/react";
 import { useRouter } from 'next/navigation'
-// import { useUser } from "@clerk/clerk-react";
+import { useSession } from 'next-auth/react'
 
 import {
   CommandDialog,
@@ -15,13 +14,26 @@ import {
   CommandList
 } from '@/components/ui/command'
 import { useSearch } from '@/hooks/use-search'
-import { getCurrentUser } from '@/lib/auth'
+import { useDebounce } from '@/hooks/use-debounce'
+import { Spinner } from './spinner'
 
-export const SearchCommand = async () => {
-  const user = await getCurrentUser()
+type Document = {
+  _id: string
+  title: string
+  icon?: string | null
+}
 
+export const SearchCommand = () => {
+  const { data: session } = useSession()
+  const user = session?.user
   const router = useRouter()
+
   const [isMounted, setIsMounted] = useState(false)
+  const [query, setQuery] = useState('')
+  const [documents, setDocuments] = useState<Document[]>([])
+  const [isFetching, setIsFetching] = useState(false)
+
+  const debouncedQuery = useDebounce(query, 300)
 
   const toggle = useSearch((store) => store.toggle)
   const isOpen = useSearch((store) => store.isOpen)
@@ -30,6 +42,35 @@ export const SearchCommand = async () => {
   useEffect(() => {
     setIsMounted(true)
   }, [])
+
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      if (debouncedQuery.length === 0) {
+        setDocuments([])
+        return
+      }
+      setIsFetching(true)
+      try {
+        const response = await fetch(`/api/search?q=${debouncedQuery}`)
+        if (response.ok) {
+          const data = await response.json()
+          console.log('data', data)
+          setDocuments(data)
+        } else {
+          setDocuments([])
+        }
+      } catch (error) {
+        console.error('Failed to fetch documents', error)
+        setDocuments([])
+      } finally {
+        setIsFetching(false)
+      }
+    }
+
+    if (isOpen) {
+      fetchDocuments()
+    }
+  }, [debouncedQuery, isOpen])
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -43,8 +84,15 @@ export const SearchCommand = async () => {
     return () => document.removeEventListener('keydown', down)
   }, [toggle])
 
-  const onSelect = (id: string) => {
-    router.push(`/documents/${id}`)
+  // Reset query when opening
+  useEffect(() => {
+    if (isOpen) {
+      setQuery('')
+    }
+  }, [isOpen])
+
+  const onSelect = (id: string, workspaceId: string) => {
+    router.push(`/dashboard/${workspaceId}/${id}`) // Assuming this is the correct path
     onClose()
   }
 
@@ -54,16 +102,27 @@ export const SearchCommand = async () => {
 
   return (
     <CommandDialog open={isOpen} onOpenChange={onClose}>
-      <CommandInput placeholder={`Search ${user?.username}'s Dnote...`} />
+      <CommandInput
+        placeholder={`Search ${user?.name || 'your'}'s Dnote...`}
+        value={query}
+        onValueChange={setQuery}
+      />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
+        {isFetching && (
+          <div className='flex items-center justify-center p-4'>
+            <Spinner size='lg' />
+          </div>
+        )}
+        {!isFetching && documents.length === 0 && query.length > 0 && (
+          <CommandEmpty>No results found.</CommandEmpty>
+        )}
         <CommandGroup heading='Documents'>
-          {documents?.map((document) => (
+          {documents.map((document) => (
             <CommandItem
               key={document._id}
               value={`${document._id}-${document.title}`}
               title={document.title}
-              onSelect={() => onSelect(document._id)}
+              onSelect={() => onSelect(document._id, document.workspaceId)}
             >
               {document.icon ? (
                 <p className='mr-2 text-[18px]'>{document.icon}</p>
