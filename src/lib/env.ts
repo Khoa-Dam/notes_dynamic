@@ -1,5 +1,5 @@
-import { createEnv } from "@t3-oss/env-nextjs";
-import { z } from "zod";
+import { createEnv } from '@t3-oss/env-nextjs'
+import { z } from 'zod'
 
 export const env = createEnv({
   /**
@@ -18,16 +18,16 @@ export const env = createEnv({
      * -----------------------------------------------------------------------------------------------*/
 
     NODE_ENV: z
-      .enum(["development", "test", "production"])
-      .default("development"),
+      .enum(['development', 'test', 'production'])
+      .default('development'),
 
     /* -----------------------------------------------------------------------------------------------
      * NextAuth.js
      * -----------------------------------------------------------------------------------------------*/
 
     NEXTAUTH_SECRET:
-      process.env.NODE_ENV === "production" ?
-        z.string()
+      process.env.NODE_ENV === 'production'
+        ? z.string()
         : z.string().optional(),
     NEXTAUTH_URL: z.preprocess(
       // This makes Vercel deployments not fail if you don't set NEXTAUTH_URL
@@ -45,10 +45,10 @@ export const env = createEnv({
 
     GOOGLE_CLIENT_ID: z
       .string()
-      .min(1, { message: "Google Client ID is invalid or missing" }),
+      .min(1, { message: 'Google Client ID is invalid or missing' }),
     GOOGLE_CLIENT_SECRET: z
       .string()
-      .min(1, { message: "Google Client Secret is invalid or missing" }),
+      .min(1, { message: 'Google Client Secret is invalid or missing' }),
 
     /* -----------------------------------------------------------------------------------------------
      * Github OAuth
@@ -56,13 +56,13 @@ export const env = createEnv({
 
     GITHUB_CLIENT_ID: z
       .string()
-      .min(1, { message: "Github Client ID is invalid or missing" }),
+      .min(1, { message: 'Github Client ID is invalid or missing' }),
     GITHUB_CLIENT_SECRET: z
       .string()
-      .min(1, { message: "Github Client Secret is invalid or missing" }),
+      .min(1, { message: 'Github Client Secret is invalid or missing' }),
     GITHUB_ACCESS_TOKEN: z
       .string()
-      .min(1, { message: "Github Access Token is invalid or missing" }),
+      .min(1, { message: 'Github Access Token is invalid or missing' }),
 
     /* -----------------------------------------------------------------------------------------------
      * Discord OAuth
@@ -81,7 +81,7 @@ export const env = createEnv({
 
     DATABASE_URL: z
       .string()
-      .min(1, { message: "Database URL is invalid or missing" }),
+      .min(1, { message: 'Database URL is invalid or missing' }),
 
     /* -----------------------------------------------------------------------------------------------
      * Upstash Rate Limiting (Redis)
@@ -89,16 +89,26 @@ export const env = createEnv({
 
     UPSTASH_REDIS_REST_URL: z.string().url().optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
-    ENABLE_RATE_LIMITING: z.enum(["true", "false"]).default("false"),
+    ENABLE_RATE_LIMITING: z.enum(['true', 'false']).default('false'),
     RATE_LIMITING_REQUESTS_PER_SECOND: z.coerce.number().default(50),
 
     /* -----------------------------------------------------------------------------------------------
      * Cloudinary
      * -----------------------------------------------------------------------------------------------*/
 
-    CLOUDINARY_CLOUD_NAME: z.string().min(1, { message: "Cloudinary Cloud Name is required" }),
-    CLOUDINARY_API_KEY: z.string().min(1, { message: "Cloudinary API Key is required" }),
-    CLOUDINARY_API_SECRET: z.string().min(1, { message: "Cloudinary API Secret is required" }),
+    CLOUDINARY_CLOUD_NAME: z
+      .string()
+      .min(1, { message: 'Cloudinary Cloud Name is required' }),
+    CLOUDINARY_API_KEY: z
+      .string()
+      .min(1, { message: 'Cloudinary API Key is required' }),
+    CLOUDINARY_API_SECRET: z
+      .string()
+      .min(1, { message: 'Cloudinary API Secret is required' })
+
+    // NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY: z
+    //   .string()
+    //   .min(1, { message: 'Liveblock api' })
   },
 
   /**
@@ -107,7 +117,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_APP_URL: z.string().url(),
+    NEXT_PUBLIC_APP_URL: z.string().url()
   },
 
   /**
@@ -116,12 +126,12 @@ export const env = createEnv({
    * For Next.js >= 13.4.4, you only need to destructure client variables (Only valid for `experimental__runtimeEnv`)
    */
   experimental__runtimeEnv: {
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL
   },
 
   /**
    * Makes it so that empty strings are treated as undefined.
    * `SOME_VAR: z.string()` and `SOME_VAR=''` will throw an error.
    */
-  emptyStringAsUndefined: true,
-});
+  emptyStringAsUndefined: true
+})

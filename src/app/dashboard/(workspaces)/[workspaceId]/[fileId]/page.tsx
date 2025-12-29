@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useCallback, useEffect, useMemo, useState } from 'react'
+
 import { notFound, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
@@ -10,6 +11,7 @@ import {
   DropdownMenuTrigger
 } from '@radix-ui/react-dropdown-menu'
 import { ChevronLeft, MoreVertical, Trash2 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 
 import type { File } from '@/types/db'
 
@@ -193,6 +195,7 @@ function FileContent({
         />
         <CollaborativeFileEditor
           fileId={fileId}
+          editable={true}
           content={content}
           onContentChange={onContentChange}
         />
@@ -203,6 +206,8 @@ function FileContent({
 
 export default function FilePage({ params }: PageProps) {
   const { workspaceId, fileId } = use(params)
+  const { data: session } = useSession()
+  const user = session?.user
   const [file, setFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const { files } = useAppState()
@@ -254,7 +259,11 @@ export default function FilePage({ params }: PageProps) {
         id={`file-${fileId}`}
         initialPresence={{
           cursor: null,
-          user: { name: 'Owner', avatar: '', color: '#64B5F6' }
+          user: {
+            name: user?.name ?? 'Anonymous',
+            avatar: user?.image ?? '',
+            color: '#64B5F6'
+          }
         }}
       >
         <FileContent file={file} fileId={fileId} workspaceId={workspaceId} />

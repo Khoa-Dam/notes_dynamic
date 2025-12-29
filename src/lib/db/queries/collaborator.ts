@@ -41,21 +41,21 @@ export async function addCollaborator(workspaceId: string, userId: string) {
           eq(collaborators.workspaceId, workspaceId),
           eq(collaborators.userId, userId)
         )
-      );
+      )
 
     if (existing.length > 0) {
-      return { success: false, error: "User is already a collaborator" };
+      return { success: false, error: 'User is already a collaborator' }
     }
 
     await db.insert(collaborators).values({
       workspaceId,
-      userId,
-    });
+      userId
+    })
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Error adding collaborator:", error);
-    return { success: false, error: "Failed to add collaborator" };
+    console.error('Error adding collaborator:', error)
+    return { success: false, error: 'Failed to add collaborator' }
   }
 }
 
@@ -68,12 +68,12 @@ export async function removeCollaborator(workspaceId: string, userId: string) {
           eq(collaborators.workspaceId, workspaceId),
           eq(collaborators.userId, userId)
         )
-      );
+      )
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Error removing collaborator:", error);
-    return { success: false, error: "Failed to remove collaborator" };
+    console.error('Error removing collaborator:', error)
+    return { success: false, error: 'Failed to remove collaborator' }
   }
 }
 
@@ -84,14 +84,14 @@ export async function getUserByEmail(email: string) {
         id: users.id,
         name: users.name,
         email: users.email,
-        image: users.image,
+        image: users.image
       })
       .from(users)
-      .where(eq(users.email, email));
+      .where(eq(users.email, email))
 
-    return result[0] || null;
+    return result[0] || null
   } catch (error) {
-    console.error("Error getting user by email:", error);
-    return null;
+    console.error('Error getting user by email:', error)
+    return null
   }
 }

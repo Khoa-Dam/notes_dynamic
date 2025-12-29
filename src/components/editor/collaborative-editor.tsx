@@ -54,7 +54,7 @@ export default function CollaborativeEditor({
       },
     });
     
-    editorRef.current = newEditor;
+    setEditor(newEditor);
 
     // Wait for sync then initialize content if needed
     const handleSync = (synced: boolean) => {
@@ -73,10 +73,6 @@ export default function CollaborativeEditor({
           // ignore parse errors
         }
       }
-      
-      if (mountedRef.current) {
-        setEditor(newEditor);
-      }
     };
 
     provider.on("sync", handleSync);
@@ -92,7 +88,7 @@ export default function CollaborativeEditor({
       provider.destroy();
       doc.destroy();
     };
-  }, [room]); // Only depend on room, not on userName/userColor/initialContentString
+  }, [room, userName, userColor]); // Only depend on room, not on userName/userColor/initialContentString
 
   // Handle content changes
   useEffect(() => {
