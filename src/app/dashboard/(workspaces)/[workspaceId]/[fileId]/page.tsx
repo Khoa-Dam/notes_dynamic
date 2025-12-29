@@ -21,7 +21,8 @@ import {
 } from '@/lib/db/queries'
 import { store, useAppState } from '@/hooks/use-app-state'
 import { useDebounceEffect } from '@/hooks/use-debounce-effect'
-import { FileEditor } from '@/components/editor/file-editor'
+import { CollaborativeFileEditor, Collaborators } from '@/components/editor/collaborative-file-editor'
+import { RoomProvider, useBroadcastEvent } from '@/lib/liveblocks'
 import { Cover } from '@/components/cover'
 import { Toolbar } from '@/components/toolbar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -36,40 +37,23 @@ interface PageProps {
   }>
 }
 
-export default function FilePage({ params }: PageProps) {
-  const { workspaceId, fileId } = use(params)
-  const [file, setFile] = useState<File | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+function FileContent({
+  file: initialFile,
+  fileId,
+  workspaceId,
+}: {
+  file: File
+  fileId: string
+  workspaceId: string
+}) {
   const router = useRouter()
-  const { files, deleteFile: removeFileFromState } = useAppState()
-  const fileFromState = files.find((f) => f.id === fileId)
+  const { deleteFile: removeFileFromState } = useAppState()
+  const broadcast = useBroadcastEvent()
 
-  const [title, setTitle] = useState('Untitled')
-  const [content, setContent] = useState('')
-  const [iconId, setIconId] = useState('💗')
-  const [bannerUrl, setBannerUrl] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (fileFromState) {
-      setBannerUrl(fileFromState.bannerUrl ?? null)
-    }
-  }, [fileFromState, fileFromState?.bannerUrl])
-
-  useEffect(() => {
-    getFileById(fileId)
-      .then((data) => {
-        if (!data) {
-          return notFound()
-        }
-        setFile(data)
-        setTitle(data.title)
-        setContent(data.data ?? '')
-        setIconId(data.iconId)
-        setBannerUrl(data.bannerUrl)
-      })
-      .catch(() => notFound())
-      .finally(() => setIsLoading(false))
-  }, [fileId])
+  const [title, setTitle] = useState(initialFile.title)
+  const [content, setContent] = useState(initialFile.data ?? '')
+  const [iconId, setIconId] = useState(initialFile.iconId)
+  const [bannerUrl, setBannerUrl] = useState<string | null>(initialFile.bannerUrl)
 
   const fileToUpdate = useMemo(
     () => ({
@@ -92,7 +76,8 @@ export default function FilePage({ params }: PageProps) {
 
   const onTitleChange = useCallback((newTitle: string) => {
     setTitle(newTitle)
-  }, [])
+    broadcast({ type: 'TITLE_UPDATE', value: newTitle })
+  }, [broadcast])
 
   const onContentChange = useCallback((newContent: string) => {
     setContent(newContent)
@@ -100,7 +85,8 @@ export default function FilePage({ params }: PageProps) {
 
   const onIconChange = useCallback((newIconId: string) => {
     setIconId(newIconId)
-  }, [])
+    broadcast({ type: 'ICON_UPDATE', value: newIconId })
+  }, [broadcast])
 
   const onBannerUrlChange = useCallback(
     (newBannerUrl: string | null) => {
@@ -119,9 +105,8 @@ export default function FilePage({ params }: PageProps) {
       toast.success('File deleted successfully')
       router.push(`/dashboard/${workspaceId}`)
       router.refresh()
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete file')
-      console.error(error)
     }
   }
 
@@ -129,28 +114,8 @@ export default function FilePage({ params }: PageProps) {
     router.push(`/dashboard/${workspaceId}`)
   }
 
-  if (isLoading) {
-    return (
-      <div>
-        <Cover />
-        <div className='md:max-w-3xl lg:max-w-4xl mx-auto mt-10'>
-          <div className='space-y-4 pl-8 pt-4'>
-            <Skeleton className='h-14 w-[50%]' />
-            <Skeleton className='h-4 w-[80%]' />
-            <Skeleton className='h-4 w-[40%]' />
-            <Skeleton className='h-4 w-[60%]' />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // if (!file) {
-  //   return notFound()
-  // }
-
   return (
-    <div className='pb-40'>
+    <>
       <div className='flex items-center justify-between border-b p-4'>
         <div className='flex items-center gap-4 flex-1'>
           <div className='lg:hidden'>
@@ -163,7 +128,8 @@ export default function FilePage({ params }: PageProps) {
         </div>
 
         <div className='flex items-center gap-2'>
-          <Publish initialData={file!} />
+          <Collaborators />
+          <Publish initialData={initialFile} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant='ghost' size='sm'>
@@ -190,17 +156,73 @@ export default function FilePage({ params }: PageProps) {
       />
       <div className='md:max-w-5xl lg:max-w-7xl mx-auto'>
         <Toolbar
-          initialData={{ ...file, title, iconId }}
+          initialData={{ ...initialFile, title, iconId }}
           onTitleChange={onTitleChange}
           onIconChange={onIconChange}
         />
-        <FileEditor
-          workspaceId={workspaceId}
+        <CollaborativeFileEditor
           fileId={fileId}
           content={content}
           onContentChange={onContentChange}
         />
       </div>
+    </>
+  )
+}
+
+export default function FilePage({ params }: PageProps) {
+  const { workspaceId, fileId } = use(params)
+  const [file, setFile] = useState<File | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const { files } = useAppState()
+  const fileFromState = files.find((f) => f.id === fileId)
+
+  useEffect(() => {
+    getFileById(fileId)
+      .then((data) => {
+        if (!data) {
+          return notFound()
+        }
+        setFile(data)
+      })
+      .catch(() => notFound())
+      .finally(() => setIsLoading(false))
+  }, [fileId])
+
+  useEffect(() => {
+    if (fileFromState && file) {
+      setFile(prev => prev ? { ...prev, bannerUrl: fileFromState.bannerUrl ?? null } : null)
+    }
+  }, [fileFromState?.bannerUrl])
+
+  if (isLoading) {
+    return (
+      <div>
+        <Cover />
+        <div className='md:max-w-3xl lg:max-w-4xl mx-auto mt-10'>
+          <div className='space-y-4 pl-8 pt-4'>
+            <Skeleton className='h-14 w-[50%]' />
+            <Skeleton className='h-4 w-[80%]' />
+            <Skeleton className='h-4 w-[40%]' />
+            <Skeleton className='h-4 w-[60%]' />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!file) {
+    return notFound()
+  }
+
+  return (
+    <div className='pb-40'>
+      <RoomProvider
+        id={`file-${fileId}`}
+        initialPresence={{ cursor: null, user: { name: 'Owner', avatar: '', color: '#64B5F6' } }}
+      >
+        <FileContent file={file} fileId={fileId} workspaceId={workspaceId} />
+      </RoomProvider>
     </div>
   )
 }
