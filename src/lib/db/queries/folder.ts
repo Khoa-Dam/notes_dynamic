@@ -69,9 +69,10 @@ export const getFoldersFromDb = getFolders;
  */
 export async function updateFolder(folder: Folder) {
   try {
+    const { id, createdAt, ...updatableFields } = folder;
     const [data] = await db
       .update(folders)
-      .set({ ...folder, updatedAt: new Date().toISOString() })
+      .set(updatableFields)
       .where(eq(folders.id, folder.id!))
       .returning();
 

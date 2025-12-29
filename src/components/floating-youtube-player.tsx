@@ -113,7 +113,7 @@ export default function FloatingYoutubePlayer() {
 
   const handleDrag = (e: React.DragEvent) => {
     if (e.clientX === 0 && e.clientY === 0) return
-    setPosition({ x: e.clientX - 40, y: e.clientY - 40 })
+    setPosition({ x: `${e.clientX - 40}px`, y: `${e.clientY - 40}px` })
   }
 
   const progressPercent = duration ? (progress / duration) * 100 : 0

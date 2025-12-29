@@ -126,11 +126,14 @@ export function FoldersCollapsed() {
     const newFile: File = {
       id: tempId,
       title: 'New page',
+      bannerUrl: '',
       iconId: '📄',
       folderId,
+      createdAt: String(Date.now()),
       workspaceId: pathname.split('/')[2],
       data: initialContent,
-      inTrash: false
+      inTrash: false,
+      isPublished: false
     }
 
     // Add file optimistically
@@ -168,11 +171,13 @@ export function FoldersCollapsed() {
     const tempId = uuid()
     const newFolder: Folder = {
       id: tempId,
+      data: null,
       title: folderName,
       iconId: selectedEmoji,
-      workspaceId: pathname.split('/')[2],
-      data: null,
-      inTrash: false
+      bannerUrl: '',
+      inTrash: false,
+      createdAt: String(Date.now()),
+      workspaceId: pathname.split('/')[2]
     }
 
     // Add folder optimistically

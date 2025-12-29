@@ -61,11 +61,14 @@ const DocumentIdPage = ({ params }: PageProps) => {
   const onIconChange = (icon: string) => {
     // Preview mode, do nothing.
   }
+  const onBannerUrlChange = () => {
+    return null
+  }
 
   if (isLoading) {
     return (
       <div>
-        <Cover />
+        <Cover fileId={''} onBannerUrlChange={onBannerUrlChange} />
         <div className='mx-auto mt-10 md:max-w-3xl lg:max-w-4xl'>
           <div className='space-y-4 pl-8 pt-4'>
             <Skeleton className='h-14 w-[50%]' />
@@ -84,17 +87,24 @@ const DocumentIdPage = ({ params }: PageProps) => {
 
   return (
     <div className='pb-40'>
-      <Cover preview url={file.bannerUrl || null} />
+      <Cover
+        fileId={''}
+        onBannerUrlChange={() => null}
+        preview
+        url={file.bannerUrl || null}
+      />
       <div className='mx-auto md:max-w-5xl lg:max-w-7xl'>
         <Toolbar
           preview
+          title={''}
+          iconId={''}
           initialData={file}
           onTitleChange={onTitleChange}
           onIconChange={onIconChange}
         />
         <FileEditor
           editable={false}
-          workspaceId={file.workspaceId}
+          workspaceId={file.workspaceId!}
           fileId={file.id!}
           content={file.data}
           onContentChange={onContentChange}

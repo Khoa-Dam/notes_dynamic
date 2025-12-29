@@ -11,12 +11,8 @@ import {
 } from '@/components/ui/popover'
 import { useOrigin } from '@/hooks/use-origin'
 import { Button } from '@/components/ui/button'
+import { type File } from '@/types/db'
 import { updateFilePublishStatus } from '../lib/db/queries/file'
-
-interface File {
-  id: string
-  isPublished: boolean
-}
 
 interface PublishProps {
   initialData: File
@@ -33,9 +29,12 @@ export const Publish = ({ initialData }: PublishProps) => {
   const [copied, setCopied] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const url = `${origin}/preview/${file.id}`
+  const url = `${origin}/preview/${file?.id}`
 
   const onPublish = () => {
+    // 1. Guard clause: Ensure file and ID exist
+    if (!file?.id) return
+
     setIsSubmitting(true)
 
     const promise = updateFilePublishStatus(file.id, true)
@@ -53,6 +52,9 @@ export const Publish = ({ initialData }: PublishProps) => {
   }
 
   const onUnpublish = () => {
+    // 2. Guard clause: Ensure file and ID exist
+    if (!file?.id) return
+
     setIsSubmitting(true)
 
     const promise = updateFilePublishStatus(file.id, false)
@@ -70,12 +72,18 @@ export const Publish = ({ initialData }: PublishProps) => {
   }
 
   const onCopy = () => {
+    if (!url) return
     navigator.clipboard.writeText(url)
     setCopied(true)
 
     setTimeout(() => {
       setCopied(false)
     }, 1000)
+  }
+
+  // 3. Optional: Don't render anything if there's no data to work with
+  if (!file) {
+    return null
   }
 
   return (

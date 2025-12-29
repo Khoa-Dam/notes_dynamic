@@ -21,6 +21,7 @@ type Document = {
   _id: string
   title: string
   icon?: string | null
+  workspaceId: string
 }
 
 export const SearchCommand = () => {

@@ -17,9 +17,9 @@ import { BlockNoteEditor } from '@/components/editor/block-note-editor'
 
 interface FileEditorProps {
   editable?: boolean
-  workspaceId: string
-  fileId: string
-  content: string | null
+  workspaceId?: string
+  fileId?: string
+  content?: string | null
   onContentChange: (content: string) => void
 }
 

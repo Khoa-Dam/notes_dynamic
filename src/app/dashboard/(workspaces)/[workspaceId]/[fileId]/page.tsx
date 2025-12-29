@@ -72,22 +72,19 @@ export default function FilePage({ params }: PageProps) {
       .finally(() => setIsLoading(false))
   }, [fileId])
 
-  const fileToUpdate = useMemo(
-    () => ({
-      id: fileId,
-      title,
-      data: content,
-      iconId,
-      bannerUrl
-    }),
-    [fileId, title, content, iconId, bannerUrl]
-  )
-
   useDebounceEffect(
     () => {
-      updateFile(fileToUpdate)
+      if (!file) return
+
+      updateFile({
+        ...file,
+        title,
+        data: content,
+        iconId,
+        bannerUrl
+      })
     },
-    [fileToUpdate],
+    [file, title, content, iconId, bannerUrl],
     750
   )
 
@@ -189,7 +186,7 @@ export default function FilePage({ params }: PageProps) {
   if (isLoading) {
     return (
       <div>
-        <Cover />
+        <Cover fileId={fileId} onBannerUrlChange={onBannerUrlChange} />
         <div className='md:max-w-3xl lg:max-w-4xl mx-auto mt-10'>
           <div className='space-y-4 pl-8 pt-4'>
             <Skeleton className='h-14 w-[50%]' />
@@ -199,6 +196,10 @@ export default function FilePage({ params }: PageProps) {
         </div>
       </div>
     )
+  }
+
+  if (!file) {
+    return null
   }
 
   return (
@@ -224,7 +225,7 @@ export default function FilePage({ params }: PageProps) {
             <FileDown className='h-4 w-4' />
             Export PDF
           </Button>
-          <Publish initialData={file!} />
+          <Publish initialData={file} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant='ghost' size='sm'>
@@ -246,19 +247,19 @@ export default function FilePage({ params }: PageProps) {
 
       <div id='pdf-content' className='bg-background w-full h-full'>
         <Cover
-          id='cover-section'
           url={bannerUrl}
           fileId={fileId}
           onBannerUrlChange={onBannerUrlChange}
         />
         <div className='md:max-w-4xl lg:max-w-7xl mx-auto mt-10'>
           <Toolbar
-            initialData={{ ...file, title, iconId }}
+            initialData={file}
+            title={title}
+            iconId={iconId}
             onTitleChange={onTitleChange}
             onIconChange={onIconChange}
           />
           <FileEditor
-            id='file-editor-section'
             workspaceId={workspaceId}
             fileId={fileId}
             content={content}

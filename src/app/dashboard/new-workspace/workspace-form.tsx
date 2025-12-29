@@ -50,7 +50,13 @@ export function WorkspaceForm({ user, onSubmit }: WorkspaceFormProps) {
       createWorkspace({
         title: name,
         iconId: selectedEmoji,
-        workspaceOwnerId: user.id!
+        workspaceOwnerId: user.id!,
+        id: '',
+        data: null,
+        bannerUrl: null,
+        logo: null,
+        inTrash: false,
+        createdAt: ''
       }),
       {
         loading: `Creating your workspace "${name}"`,

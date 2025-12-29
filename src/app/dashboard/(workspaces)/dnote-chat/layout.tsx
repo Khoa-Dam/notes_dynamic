@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { AppStateProvider } from '@/components/app-state-provider'
 import { getCurrentUser } from '@/lib/auth'
 import { getFiles, getFolders } from '@/lib/db/queries'
+import type { File, Folder } from '@/types/db'
 import { ResizableLayout } from '../components/resizable-layout'
 
 export const DnoteChatLayout: React.FCC = async ({ children }) => {
@@ -22,8 +23,8 @@ export const DnoteChatLayout: React.FCC = async ({ children }) => {
 
   const workspaceId = cookieStore.get('last-visited-workspace-id')?.value
 
-  let files = []
-  let folders = []
+  let files: File[] = []
+  let folders: Folder[] = []
 
   if (workspaceId) {
     ;[files, folders] = await Promise.all([

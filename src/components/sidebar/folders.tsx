@@ -175,9 +175,12 @@ export function Folders() {
       title: 'Untitled',
       iconId: '📄',
       folderId,
+      bannerUrl: '',
+      createdAt: String(Date.now()),
       workspaceId: pathname.split('/')[2],
       data: initialContent,
-      inTrash: false
+      inTrash: false,
+      isPublished: false
     }
 
     // Add file optimistically
@@ -219,7 +222,9 @@ export function Folders() {
       iconId: selectedEmoji,
       workspaceId: pathname.split('/')[2],
       data: null,
-      inTrash: false
+      bannerUrl: '',
+      inTrash: false,
+      createdAt: String(Date.now())
     }
 
     // Add folder optimistically

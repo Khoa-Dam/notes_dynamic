@@ -14,7 +14,7 @@ export async function LobbyNavbar() {
       <nav className='container flex h-full items-center justify-between'>
         <Link
           href='/'
-          className='flex gap-2 px-4 font-handwriting text-xl lowercase [text-shadow:_0_2px_0_#e1e1e1] dark:[text-shadow:none]'
+          className='flex gap-2 px-4 font-handwriting text-xl lowercase [text-shadow:0_2px_0_#e1e1e1] dark:text-shadow-none'
         >
           <Logo size={28} />
           {siteConfig.name}
@@ -35,7 +35,7 @@ export async function LobbyNavbar() {
               href='/dashboard'
               className={cn(
                 buttonVariants(),
-                'h-8 rounded-full px-5 font-semibold transition-all duration-200 hover:ring-2 hover:ring-foreground hover:ring-offset-2 hover:ring-offset-background'
+                'h-8 rounded-full px-5 text-black shadow-2xl border-2 font-semibold transition-all duration-200 hover:ring-2 hover:ring-foreground hover:ring-offset-2 hover:ring-offset-background'
               )}
             >
               Dashboard

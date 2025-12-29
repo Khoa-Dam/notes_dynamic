@@ -22,7 +22,7 @@ export default async function WorkspaceSetupPage() {
   const user = await getCurrentUser()
 
   return (
-    <AppStateProvider user={user!} files={[]} folders={[]}>
+    <AppStateProvider user={user!} files={[]} folders={[]} workspaceId={''}>
       <div className='flex h-screen items-center justify-center'>
         <section className='dark relative hidden size-full items-center justify-center lg:flex'>
           <div className='absolute inset-0 bg-zinc-900' />

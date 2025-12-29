@@ -251,13 +251,13 @@ export default function BlockNoteViewWrapper({
         <FormattingToolbarController
           formattingToolbar={() => (
             <FormattingToolbar
-              style={{
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'row',
-                itemsAlign: 'center',
-                justifyContent: 'center'
-              }}
+            // style={{
+            //   width: '100%',
+            //   display: 'flex',
+            //   flexDirection: 'row',
+            //   itemsAlign: 'center',
+            //   justifyContent: 'center'
+            // }}
             >
               <BlockTypeSelect key='blockTypeSelect' />
 

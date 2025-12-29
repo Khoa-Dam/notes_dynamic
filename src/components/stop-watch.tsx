@@ -112,7 +112,7 @@ export default function Stopwatch() {
 
   const handleDrag = (e: React.DragEvent) => {
     if (e.clientX === 0 && e.clientY === 0) return
-    setPosition({ x: e.clientX - 100, y: e.clientY - 20 })
+    setPosition({ x: `${e.clientX - 100}px`, y: e.clientY - 20 })
   }
 
   const handleModeChange = (newMode: 'stopwatch' | 'countdown') => {

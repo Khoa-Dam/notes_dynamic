@@ -256,7 +256,7 @@ export default function GeminiChatPage() {
                 onKeyDown={handleKeyDown}
                 placeholder='Ask anything...'
                 disabled={isLoading}
-                className='min-h-[40px] max-h-[200px] text-xl resize-none'
+                className='min-h-10 max-h-[200px] text-xl resize-none'
               />
               <Button
                 type='submit'

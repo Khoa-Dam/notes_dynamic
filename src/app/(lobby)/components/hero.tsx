@@ -40,7 +40,7 @@ export function Hero() {
             href='/login'
             className={cn(
               buttonVariants({ size: 'lg' }),
-              'group gap-2 text-lg shadow-lg transition-all hover:scale-105'
+              'group gap-2 text-lg shadow-lg  text-black border-2   transition-all hover:scale-105'
             )}
           >
             Get Started Free

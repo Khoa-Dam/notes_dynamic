@@ -11,24 +11,32 @@ import { EmojiPicker } from './emoji-picker'
 
 interface ToolbarProps {
   initialData: File
+  title: string
+  iconId: string
   onTitleChange: (title: string) => void
   onIconChange: (icon: string) => void
   preview?: boolean
 }
 
 export const Toolbar = memo(
-  ({ initialData, onTitleChange, onIconChange, preview }: ToolbarProps) => {
+  ({
+    initialData,
+    title,
+    iconId,
+    onTitleChange,
+    onIconChange,
+    preview
+  }: ToolbarProps) => {
     const inputRef = useRef<ElementRef<'textarea'>>(null)
     const [isEditing, setIsEditing] = useState(false)
     const coverImage = useCoverImage()
-    const [selectedEmoji, setSelectedEmoji] = useState(initialData.iconId)
+
     const enableInput = () => {
       if (preview) return
 
       setIsEditing(true)
       setTimeout(() => {
         inputRef.current?.focus()
-        // Set selection to the end of the text
         inputRef.current?.setSelectionRange(
           inputRef.current.value.length,
           inputRef.current.value.length
@@ -39,7 +47,6 @@ export const Toolbar = memo(
     const disableInput = () => setIsEditing(false)
 
     const onInput = (value: string) => {
-      console.log('value', value)
       onTitleChange(value)
     }
 
@@ -51,23 +58,19 @@ export const Toolbar = memo(
     }
 
     const onIconSelect = (icon: string) => {
-      // setSelectedEmoji(icon)
       onIconChange(icon)
     }
 
     const onRemoveIcon = () => {
-      // Default icon when removed, as iconId is not nullable
       onIconChange('📄')
     }
 
     return (
       <div className='pl-[54px] group relative'>
-        {!!initialData.iconId && !preview && (
+        {!!iconId && !preview && (
           <div className='flex items-center gap-x-2 group/icon pt-6'>
             <EmojiPicker getValue={onIconSelect}>
-              <p className='text-6xl hover:opacity-75 transition'>
-                {initialData?.iconId}
-              </p>
+              <p className='text-6xl hover:opacity-75 transition'>{iconId}</p>
             </EmojiPicker>
             <Button
               onClick={onRemoveIcon}
@@ -79,11 +82,11 @@ export const Toolbar = memo(
             </Button>
           </div>
         )}
-        {!!initialData.iconId && preview && (
-          <p className='text-6xl pt-6'>{initialData.iconId}</p>
+        {!!iconId && preview && (
+          <p className='text-6xl pt-6'>{iconId}</p>
         )}
         <div className='opacity-0 group-hover:opacity-100 flex items-center gap-x-1 py-4'>
-          {!initialData.iconId && !preview && (
+          {!iconId && !preview && (
             <EmojiPicker getValue={onIconSelect}>
               <Button
                 className='text-muted-foreground text-xs'
@@ -97,7 +100,7 @@ export const Toolbar = memo(
           )}
           {!initialData.bannerUrl && !preview && (
             <Button
-              onClick={() => coverImage.onOpen(initialData.id!)}
+              onClick={() => coverImage.onOpen(initialData.id)}
               className='text-muted-foreground text-xs'
               variant='outline'
               size='sm'
@@ -112,7 +115,7 @@ export const Toolbar = memo(
             ref={inputRef}
             onBlur={disableInput}
             onKeyDown={onKeyDown}
-            value={initialData.title}
+            value={title}
             onChange={(e) => onInput(e.target.value)}
             className='text-5xl bg-transparent font-bold break-words outline-none text-[#3F3F3F] dark:text-[#CFCFCF] resize-none'
           />
@@ -121,7 +124,7 @@ export const Toolbar = memo(
             onClick={enableInput}
             className='pb-[11.5px] text-5xl font-bold break-words outline-none text-[#3F3F3F] dark:text-[#CFCFCF]'
           >
-            {initialData.title || 'Untitled'}
+            {title || 'Untitled'}
           </div>
         )}
       </div>

@@ -20,8 +20,8 @@ export const Cover = memo(
   ({ fileId, onBannerUrlChange, url, preview }: CoverImageProps) => {
     const coverImage = useCoverImage()
     const [isLoading, setIsLoading] = useState(true)
-    console.log('url', url)
-    console.log('preview', preview)
+    // console.log('url', url)
+    // console.log('preview', preview)
     const onRemove = async () => {
       onBannerUrlChange(null)
     }
