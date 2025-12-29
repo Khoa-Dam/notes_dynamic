@@ -25,7 +25,11 @@ import {
   CollaborativeFileEditor,
   Collaborators,
 } from "@/components/editor/collaborative-file-editor";
-import { RoomProvider, useBroadcastEvent } from "@/lib/liveblocks";
+import {
+  RoomProvider,
+  useBroadcastEvent,
+  useEventListener,
+} from "@/lib/liveblocks";
 import { Cover } from "@/components/cover";
 import { Toolbar } from "@/components/toolbar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -58,8 +62,17 @@ function FileContent({
   const [content, setContent] = useState(initialFile.data ?? "");
   const [iconId, setIconId] = useState(initialFile.iconId);
   const [bannerUrl, setBannerUrl] = useState<string | null>(
-    initialFile.bannerUrl
+    initialFile.bannerUrl ?? null
   );
+
+  // Listen for title/icon updates from other users
+  useEventListener(({ event }) => {
+    if (event.type === "TITLE_UPDATE") {
+      setTitle(event.value);
+    } else if (event.type === "ICON_UPDATE") {
+      setIconId(event.value);
+    }
+  });
 
   const fileToUpdate = useMemo(
     () => ({
