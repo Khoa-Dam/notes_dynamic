@@ -175,8 +175,8 @@ export function Folders() {
       title: 'Untitled',
       iconId: '📄',
       folderId,
-      bannerUrl: '',
-      createdAt: String(Date.now()),
+      bannerUrl: null,
+      createdAt: new Date().toISOString(),
       workspaceId: pathname.split('/')[2],
       data: initialContent,
       inTrash: false,
@@ -219,12 +219,12 @@ export function Folders() {
     const newFolder: Folder = {
       id: tempId,
       title: folderName,
-      iconId: selectedEmoji,
+      iconId: selectedEmoji, // null nếu không chọn emoji
       workspaceId: pathname.split('/')[2],
       data: null,
-      bannerUrl: '',
+      bannerUrl: null,
       inTrash: false,
-      createdAt: String(Date.now())
+      createdAt: new Date().toISOString() // Định dạng chuẩn ISO cho Postgres
     }
 
     // Add folder optimistically
@@ -535,7 +535,7 @@ export function Folders() {
                           onDoubleClick={() => {
                             setEditingFolderId(id!)
                             setFolderName(title)
-                            setSelectedEmoji(iconId)
+                            setSelectedEmoji(iconId || '')
                           }}
                           className={cn(
                             buttonVariants({ size: 'lg', variant: 'ghost' }),

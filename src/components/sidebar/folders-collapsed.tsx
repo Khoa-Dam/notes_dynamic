@@ -129,7 +129,7 @@ export function FoldersCollapsed() {
       bannerUrl: '',
       iconId: '📄',
       folderId,
-      createdAt: String(Date.now()),
+      createdAt: new Date().toISOString(),
       workspaceId: pathname.split('/')[2],
       data: initialContent,
       inTrash: false,
@@ -173,10 +173,9 @@ export function FoldersCollapsed() {
       id: tempId,
       data: null,
       title: folderName,
-      iconId: selectedEmoji,
+      iconId: selectedEmoji || '📁',
       bannerUrl: '',
-      inTrash: false,
-      createdAt: String(Date.now()),
+      createdAt: new Date().toISOString(),
       workspaceId: pathname.split('/')[2]
     }
 
