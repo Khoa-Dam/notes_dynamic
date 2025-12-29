@@ -155,7 +155,12 @@ function FileContent({
         <div className="flex items-center gap-2">
           <Collaborators />
           <ShareModal workspaceId={workspaceId} fileId={fileId} />
-          <Publish initialData={initialFile} />
+          <Publish
+            initialData={{
+              id: initialFile.id!,
+              isPublished: initialFile.isPublished ?? false,
+            }}
+          />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm">
@@ -182,7 +187,7 @@ function FileContent({
       />
       <div className="md:max-w-5xl lg:max-w-7xl mx-auto">
         <Toolbar
-          initialData={{ ...initialFile, title, iconId }}
+          initialData={initialFile}
           onTitleChange={onTitleChange}
           onIconChange={onIconChange}
         />
@@ -226,7 +231,7 @@ export default function FilePage({ params }: PageProps) {
   if (isLoading) {
     return (
       <div>
-        <Cover />
+        <div className="relative w-full h-[12vh]" />
         <div className="md:max-w-3xl lg:max-w-4xl mx-auto mt-10">
           <div className="space-y-4 pl-8 pt-4">
             <Skeleton className="h-14 w-[50%]" />
