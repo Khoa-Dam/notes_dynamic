@@ -1,17 +1,19 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+// import { useMutation, useQuery } from "convex/react";
+import { use, useEffect, useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { notFound } from 'next/navigation'
 
+// import { api } from "@/convex/_generated/api";
+// import { Id } from "@/convex/_generated/dataModel";
 import type { File } from '@/types/db'
-import { getFileById, updateFile } from '@/lib/db/queries'
+import { getFileById } from '@/lib/db/queries'
 
 import { Cover } from '@/components/cover'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Toolbar } from '@/components/toolbar'
-import { CollaborativeFileEditor, Collaborators } from '@/components/editor/collaborative-file-editor'
-import { RoomProvider, useEventListener } from '@/lib/liveblocks'
-import { useDebounceEffect } from '@/hooks/use-debounce-effect'
+import { FileEditor } from '@/components/editor/file-editor'
 
 interface PageProps {
   params: Promise<{
@@ -19,56 +21,19 @@ interface PageProps {
   }>
 }
 
-function PreviewContent({ file: initialFile, fileId }: { file: File; fileId: string }) {
-  const [file, setFile] = useState(initialFile)
-  const [content, setContent] = useState(initialFile.data ?? '')
-
-  useEventListener(({ event }) => {
-    if (event.type === 'TITLE_UPDATE') {
-      setFile(prev => ({ ...prev, title: event.value }))
-    } else if (event.type === 'ICON_UPDATE') {
-      setFile(prev => ({ ...prev, iconId: event.value }))
-    }
-  })
-
-  useDebounceEffect(
-    () => {
-      updateFile({ id: fileId, data: content })
-    },
-    [content, fileId],
-    750
-  )
-
-  const onContentChange = (newContent: string) => {
-    setContent(newContent)
-  }
-
-  return (
-    <>
-      <div className='flex items-center justify-end border-b p-4'>
-        <Collaborators />
-      </div>
-      <Cover preview url={file.bannerUrl || null} />
-      <div className='mx-auto md:max-w-5xl lg:max-w-7xl'>
-        <Toolbar
-          preview
-          initialData={file}
-          onTitleChange={() => {}}
-          onIconChange={() => {}}
-        />
-        <CollaborativeFileEditor
-          fileId={file.id!}
-          content={content}
-          onContentChange={onContentChange}
-          editable={true}
-          userName="Guest"
-        />
-      </div>
-    </>
-  )
-}
-
 const DocumentIdPage = ({ params }: PageProps) => {
+  const Editor = useMemo(
+    () =>
+      dynamic(
+        () =>
+          import('@/components/editor/file-editor').then(
+            (mod) => mod.FileEditor
+          ),
+        { ssr: false }
+      ),
+    []
+  )
+
   const { documentId: fileId } = use(params)
   const [file, setFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -76,7 +41,7 @@ const DocumentIdPage = ({ params }: PageProps) => {
   useEffect(() => {
     getFileById(fileId)
       .then((data) => {
-        if (!data || !data.isPublished) {
+        if (!data) {
           return notFound()
         }
         setFile(data)
@@ -84,6 +49,18 @@ const DocumentIdPage = ({ params }: PageProps) => {
       .catch(() => notFound())
       .finally(() => setIsLoading(false))
   }, [fileId])
+
+  const onContentChange = (content: string) => {
+    // Preview mode, do nothing.
+  }
+
+  const onTitleChange = (title: string) => {
+    // Preview mode, do nothing.
+  }
+
+  const onIconChange = (icon: string) => {
+    // Preview mode, do nothing.
+  }
 
   if (isLoading) {
     return (
@@ -107,12 +84,22 @@ const DocumentIdPage = ({ params }: PageProps) => {
 
   return (
     <div className='pb-40'>
-      <RoomProvider
-        id={`file-${fileId}`}
-        initialPresence={{ cursor: null, user: { name: 'Guest', avatar: '', color: '#81C784' } }}
-      >
-        <PreviewContent file={file} fileId={fileId} />
-      </RoomProvider>
+      <Cover preview url={file.bannerUrl || null} />
+      <div className='mx-auto md:max-w-5xl lg:max-w-7xl'>
+        <Toolbar
+          preview
+          initialData={file}
+          onTitleChange={onTitleChange}
+          onIconChange={onIconChange}
+        />
+        <FileEditor
+          editable={false}
+          workspaceId={file.workspaceId}
+          fileId={file.id!}
+          content={file.data}
+          onContentChange={onContentChange}
+        />
+      </div>
     </div>
   )
 }
