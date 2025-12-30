@@ -27,7 +27,9 @@ export function EmojiPicker(props: EmojiPickerProps) {
 
   return (
     <Popover>
-      <PopoverTrigger {...restProps}>{children}</PopoverTrigger>
+      <PopoverTrigger asChild {...restProps}>
+        {children}
+      </PopoverTrigger>
 
       <PopoverContent side={side} align={align} className='border-none p-0'>
         <Picker theme={resolvedTheme as Theme} onEmojiClick={onEmojiClick} />
