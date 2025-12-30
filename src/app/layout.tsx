@@ -12,9 +12,6 @@ import { siteConfig } from '@/config/site'
 import { fontHandwriting, fontHeading, fontMono, fontSans } from '@/lib/fonts'
 import { absoluteUrl, cn } from '@/lib/utils'
 import { ModalProvider } from '@/components/providers/modal-provider'
-import Stopwatch from '@/components/stop-watch'
-import FloatingYoutubePlayer from '@/components/floating-youtube-player'
-import { Chatbot } from '@/components/chatbot'
 
 export const viewport: Viewport = {
   viewportFit: 'cover',
@@ -83,9 +80,6 @@ export default function RootLayout({ children }: React.PropsWithChildren) {
             {children}
             <Toaster />
             <ModalProvider />
-            <Stopwatch />
-            <FloatingYoutubePlayer />
-            <Chatbot />
           </Providers>
 
           <Analytics />
