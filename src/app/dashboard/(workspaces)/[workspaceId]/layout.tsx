@@ -9,7 +9,7 @@ import { ResizableLayout } from '../components/resizable-layout'
 import Stopwatch from '@/components/stop-watch'
 import FloatingYoutubePlayer from '@/components/floating-youtube-player'
 import { WorkspaceIdManager } from '@/components/workspace/workspace-id-manager'
-// import { Chatbot } from '@/components/chatbot'
+import { Chatbot } from '@/components/chatbot'
 
 export const WorkspaceLayout: React.FCC<{
   params: Promise<{ workspaceId: string }>
@@ -46,6 +46,9 @@ export const WorkspaceLayout: React.FCC<{
         defaultCollapsed={defaultCollapsed as boolean}
       >
         {children}
+        <Stopwatch />
+        <FloatingYoutubePlayer />
+        <Chatbot />
       </ResizableLayout>
     </AppStateProvider>
   )
